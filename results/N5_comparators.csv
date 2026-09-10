@@ -1,0 +1,5 @@
+comparator,spearman,top3_jaccard
+local_only,0.2882387032112767,0.2
+uniform_S_0.25,0.10977443609022557,0.2
+uniform_S_0.50,0.38796992481203,0.2
+uniform_S_0.75,0.7804511278195487,0.5
