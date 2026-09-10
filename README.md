@@ -46,6 +46,25 @@ pip install -r requirements.txt
 python run_experiments.py
 ```
 
+## Branch naming convention
+
+Use the following prefixes for branches:
+
+- `feature/<short-description>`
+- `fix/<short-description>`
+- `docs/<short-description>`
+- `test/<short-description>`
+- `experiment/<short-description>`
+- `analysis/<short-description>`
+
+Examples:
+
+- `feature/result-export`
+- `fix/csv-loader`
+- `docs/readme-cleanup`
+- `experiment/lc-sweep`
+- `analysis/ranking-stability`
+
 ## Useful commands
 
 Full suite:
