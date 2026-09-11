@@ -1,22 +1,22 @@
 {
   "N1": {
     "outlet": "F",
-    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+    "fixture_status": "canonical_historical_dataset"
   },
   "N2": {
     "outlet": "H",
-    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+    "fixture_status": "canonical_historical_dataset"
   },
   "N3": {
     "outlet": "H",
-    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+    "fixture_status": "canonical_historical_dataset"
   },
   "N4": {
     "outlet": "G",
-    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+    "fixture_status": "canonical_historical_dataset"
   },
   "N5": {
     "outlet": "N20",
-    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+    "fixture_status": "canonical_historical_dataset"
   }
 }

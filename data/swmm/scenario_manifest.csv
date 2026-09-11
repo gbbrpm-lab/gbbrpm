@@ -1,0 +1,13 @@
+Scenario,BlockedEdge,AreaLoss,File
+N5_block_N1_N5_25,N1->N5,0.25,N5_block_N1_N5_25.inp
+N5_block_N1_N5_50,N1->N5,0.5,N5_block_N1_N5_50.inp
+N5_block_N1_N5_75,N1->N5,0.75,N5_block_N1_N5_75.inp
+N5_block_N6_N10_25,N6->N10,0.25,N5_block_N6_N10_25.inp
+N5_block_N6_N10_50,N6->N10,0.5,N5_block_N6_N10_50.inp
+N5_block_N6_N10_75,N6->N10,0.75,N5_block_N6_N10_75.inp
+N5_block_N12_N15_25,N12->N15,0.25,N5_block_N12_N15_25.inp
+N5_block_N12_N15_50,N12->N15,0.5,N5_block_N12_N15_50.inp
+N5_block_N12_N15_75,N12->N15,0.75,N5_block_N12_N15_75.inp
+N5_block_N18_N19_25,N18->N19,0.25,N5_block_N18_N19_25.inp
+N5_block_N18_N19_50,N18->N19,0.5,N5_block_N18_N19_50.inp
+N5_block_N18_N19_75,N18->N19,0.75,N5_block_N18_N19_75.inp
