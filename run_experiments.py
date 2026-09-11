@@ -14,10 +14,10 @@ DATA=HERE/"data"; RESULTS=HERE/"results"
 def manifest():
     return json.loads((DATA/"network_manifest.json").read_text())
 
-def run_core(networks):
+def run_core(networks, data_source):
     m=manifest(); rows=[]
     for name in networks:
-        nodes,edges=load_network(DATA,name); outlet=m[name]["outlet"]
+        nodes,edges=load_network(name, source=data_source); outlet=m[name]["outlet"]
         risk,q=evaluate_gbbrpm(nodes,edges)
         pd.DataFrame({"node":list(risk),"R":list(risk.values())}).to_csv(RESULTS/f"{name}_baseline_node_risk.csv",index=False)
         q.to_csv(RESULTS/f"{name}_baseline_edge_contributions.csv",index=False)
@@ -30,13 +30,18 @@ def main():
     p.add_argument("--networks",nargs="*",default=["N1","N2","N3","N4","N5"])
     p.add_argument("--trials",type=int,default=100)
     p.add_argument("--seed",type=int,default=41)
+    p.add_argument(
+        "--data-source",
+        choices=["historical", "recovered"],
+        default="historical",
+    )
     a=p.parse_args(); RESULTS.mkdir(exist_ok=True)
 
-    core=run_core(a.networks)
+    core=run_core(a.networks, a.data_source)
     print(f"[core] {len(core)} scenario rows")
 
     if a.suite=="full":
-        n,e=load_network(DATA,"N5")
+        n,e=load_network("N5", source=a.data_source)
         comp=compare_to_gbbrpm(n,e); comp.to_csv(RESULTS/"N5_comparators.csv",index=False)
         print("[comparators]"); print(comp.to_string(index=False))
 
