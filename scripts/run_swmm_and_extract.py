@@ -1,15 +1,17 @@
 from pathlib import Path
-import re, math
+import re
 import pandas as pd
-import numpy as np
 
 try:
     from swmm.toolkit import solver
 except ImportError:
     raise SystemExit("Install swmm-toolkit first: pip install swmm-toolkit")
 
-ROOT = Path(__file__).parent
-manifest = pd.read_csv(ROOT / "scenario_manifest.csv")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SWMM_DIR = REPO_ROOT / "data" / "swmm"
+SCENARIO_DIR = SWMM_DIR / "scenarios"
+EXTRACTED_DIR = SWMM_DIR / "extracted"
+manifest = pd.read_csv(SWMM_DIR / "scenario_manifest.csv")
 
 
 def run(inp):
@@ -77,7 +79,9 @@ def parse_node_flooding(rpt):
 
 
 results = []
-all_files = [ROOT / "N5_SWMM_base.inp"] + [ROOT / f for f in manifest["File"]]
+all_files = [SWMM_DIR / "N5_SWMM_base.inp"] + [
+    SCENARIO_DIR / f for f in manifest["File"]
+]
 for inp in all_files:
     rpt = run(inp)
     d = parse_node_depth_summary(rpt)
@@ -93,7 +97,9 @@ for inp in all_files:
 
 if results:
     res = pd.concat(results, ignore_index=True)
-    res.to_csv(ROOT / "swmm_hydraulic_results.csv", index=False)
+    EXTRACTED_DIR.mkdir(parents=True, exist_ok=True)
+    output = EXTRACTED_DIR / "swmm_hydraulic_results.csv"
+    res.to_csv(output, index=False)
     print(
         res.groupby("Scenario").apply(
             lambda x: x.sort_values(["FloodVolume", "MaxDepth"], ascending=False).head(
@@ -101,3 +107,4 @@ if results:
             )[["Node", "MaxDepth", "FloodVolume"]]
         )
     )
+    print(f"\nSaved: {output}")
