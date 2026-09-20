@@ -27,12 +27,26 @@ def sparse_random_dag(n, edges_per_node=3, seed=41):
     return nodes, pd.DataFrame(rows, columns=["source", "target", "C", "L", "tau"])
 
 
-def run_scalability(sizes=(20, 50, 100, 250, 500, 1000), repeats=5, seed=41):
+def run_scalability(
+    sizes=(20, 50, 100, 250, 500, 1000),
+    repeats=30,
+    warmups=5,
+    seed=41,
+):
+    if repeats < 1:
+        raise ValueError("repeats must be at least 1")
+
+    if warmups < 0:
+        raise ValueError("warmups cannot be negative")
+
     rows = []
 
     for n in sizes:
         nodes, edges = sparse_random_dag(n, 3, seed)
-        evaluate_gbbrpm(nodes, edges)
+
+        for _ in range(warmups):
+            evaluate_gbbrpm(nodes, edges)
+
         times = []
 
         for _ in range(repeats):
@@ -45,9 +59,13 @@ def run_scalability(sizes=(20, 50, 100, 250, 500, 1000), repeats=5, seed=41):
                 "nodes": n,
                 "edges": len(edges),
                 "mean_ms": float(np.mean(times)),
+                "median_ms": float(np.median(times)),
+                "q25_ms": float(np.percentile(times, 25)),
+                "q75_ms": float(np.percentile(times, 75)),
                 "min_ms": float(np.min(times)),
                 "max_ms": float(np.max(times)),
                 "repeats": repeats,
+                "warmups": warmups,
             }
         )
 

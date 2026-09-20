@@ -137,6 +137,17 @@ Run the historical suite with 600 robustness/property trials:
 python run_experiments.py --data-source historical --trials 600 --seed 41
 ```
 
+The scalability block uses 30 timed repetitions and 5 warm-up runs by
+default. These can be changed explicitly when a quicker development check is
+needed:
+
+```bash
+python run_experiments.py \
+  --data-source historical \
+  --scalability-repeats 5 \
+  --scalability-warmups 1
+```
+
 Run selected networks only:
 
 ```bash
@@ -157,6 +168,7 @@ Inspect saved outputs and run the smoke test:
 ```bash
 python inspect_results.py
 python tests/smoke_test.py
+python tests/reproducibility_test.py
 ```
 
 ## Controlled scenario suite
@@ -220,6 +232,8 @@ Generated files are written under `results/`. Important outputs include:
 - `N5_comparators.csv`
 - `N5_robustness_summary.csv`
 - `property_tests_summary.csv`
+- `reconvergence_summary.csv`
+- `reconvergence_node_diagnostic.csv`
 - `scalability.csv`
 - `N*_baseline_node_risk.csv`
 - `N*_baseline_edge_contributions.csv`
@@ -235,7 +249,28 @@ Run the SWMM workflow with:
 
 ```bash
 python scripts/run_swmm_and_extract.py
+python scripts/compare_swmm_reference.py
 ```
+
+The first command runs the supplied SWMM input files and refreshes
+`data/swmm/extracted/swmm_hydraulic_results.csv`. The second command can be
+run independently from the stored hydraulic results and writes:
+
+- `data/swmm/extracted/swmm_comparison_by_scenario.csv`
+- `data/swmm/extracted/swmm_comparison_summary.csv`
+
+The comparison protocol represents conduit area loss as a reduction in
+effective GBBRPM edge capacity, ranks positive changes over the union of
+affected nodes, and reports the share of positive hydraulic change outside
+the strictly downstream GBBRPM scope. The stored inputs reproduce mean
+outside-scope shares near `0.7120` for maximum depth and `0.4053` for flooding
+volume.
+
+The rank-correlation and top-3 values described as historical or archived in
+the thesis are not asserted as regenerated unless their original calculation
+rule is recovered. The repository now reports the values produced by the
+explicit protocol above instead of silently selecting an undocumented rule
+that happens to reproduce an archived number.
 
 SWMM is used as an external hydraulic reference to examine:
 
@@ -269,6 +304,13 @@ The evaluator validates:
 
 Where stored `u` or `S` columns exist, they may be checked against values
 recomputed from `L` and `C`.
+
+The reconvergence diagnostic is similarly explicit. It retains bounded
+noisy-OR aggregation for independent source lineages and, solely for the
+path-pruned counterfactual, keeps the largest incoming contribution when
+branches share upstream ancestry. This regenerates the preserved N3, N4, and
+N5 overlap-inflation table; the path-pruned result is a diagnostic reference,
+not ground truth or a replacement formulation.
 
 ## Repository structure
 

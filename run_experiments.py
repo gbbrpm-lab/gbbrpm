@@ -7,6 +7,7 @@ from scenarios import run_core_scenarios
 from comparators import compare_to_gbbrpm
 from robustness import perturbation_trials, summarize_robustness
 from property_tests import run_property_tests
+from reconvergence import reconvergence_diagnostic
 from scalability import run_scalability
 
 HERE = Path(__file__).resolve().parent
@@ -45,6 +46,8 @@ def main():
     p.add_argument("--networks", nargs="*", default=["N1", "N2", "N3", "N4", "N5"])
     p.add_argument("--trials", type=int, default=100)
     p.add_argument("--seed", type=int, default=41)
+    p.add_argument("--scalability-repeats", type=int, default=30)
+    p.add_argument("--scalability-warmups", type=int, default=5)
     p.add_argument(
         "--data-source",
         choices=["historical", "recovered"],
@@ -94,7 +97,32 @@ def main():
         print("[property tests]")
         print(ps.to_string(index=False))
 
-        sc = run_scalability()
+        reconvergence_rows = []
+        reconvergence_summaries = []
+        network_metadata = manifest()
+        for name in [n for n in a.networks if n in ("N3", "N4", "N5")]:
+            node_rows, summary = reconvergence_diagnostic(
+                name,
+                source=a.data_source,
+                outlet=network_metadata[name]["outlet"],
+            )
+            reconvergence_rows.append(node_rows)
+            reconvergence_summaries.append(summary)
+
+        if reconvergence_rows:
+            pd.concat(reconvergence_rows, ignore_index=True).to_csv(
+                RESULTS / "reconvergence_node_diagnostic.csv", index=False
+            )
+            rd = pd.DataFrame(reconvergence_summaries)
+            rd.to_csv(RESULTS / "reconvergence_summary.csv", index=False)
+            print("[reconvergence]")
+            print(rd.to_string(index=False))
+
+        sc = run_scalability(
+            repeats=a.scalability_repeats,
+            warmups=a.scalability_warmups,
+            seed=a.seed,
+        )
         sc.to_csv(RESULTS / "scalability.csv", index=False)
         print("[scalability]")
         print(sc.to_string(index=False))

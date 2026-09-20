@@ -8,6 +8,7 @@ for name in [
     "N5_comparators.csv",
     "N5_robustness_summary.csv",
     "property_tests_summary.csv",
+    "reconvergence_summary.csv",
     "scalability.csv",
 ]:
     p = r / name
