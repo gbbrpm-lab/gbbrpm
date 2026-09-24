@@ -30,9 +30,11 @@ For each SWMM scenario:
 3. recompute `S_ij = clip(L_ij/C'_ij, 0, 1)` and execute GBBRPM;
 4. calculate positive GBBRPM risk change and positive SWMM maximum-depth and
    flooding-volume change relative to their respective baselines;
-5. compute Spearman rank correspondence over the union of nodes with a
-   positive change in either model and top-3 Jaccard similarity over their
-   positive-change rankings; and
+5. define a common affected-node comparison universe as the union of nodes
+   with a positive change in either model, compute Spearman rank
+   correspondence over that universe, and calculate tie-aware top-20%
+   Jaccard similarity within the same universe while excluding zero-change
+   nodes from priority-set membership; and
 6. calculate the share of positive hydraulic change outside the blocked
    edge's target-and-descendant region.
 

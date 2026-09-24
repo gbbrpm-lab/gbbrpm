@@ -15,7 +15,7 @@ import pandas as pd
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from metrics import jaccard, spearman, topk  # noqa: E402
+from metrics import jaccard, percentile_priority_set, spearman  # noqa: E402
 from model import evaluate_gbbrpm, load_network  # noqa: E402
 
 SWMM_DIR = REPO_ROOT / "data" / "swmm"
@@ -27,7 +27,7 @@ def positive_change(scenario, baseline, column):
     return change.clip(lower=0.0)
 
 
-def compare(data_source="historical"):
+def compare(data_source="historical", priority_fraction=0.20):
     manifest = pd.read_csv(SWMM_DIR / "scenario_manifest.csv")
     hydraulics = pd.read_csv(EXTRACTED_DIR / "swmm_hydraulic_results.csv")
     hydraulic_baseline = hydraulics[hydraulics.Scenario == "N5_SWMM_base"]
@@ -86,9 +86,11 @@ def compare(data_source="historical"):
             )
 
             row[f"{label}_spearman"] = spearman(risk_values, hydraulic_values)
-            row[f"{label}_top3_jaccard"] = jaccard(
-                topk({k: v for k, v in risk_values.items() if v > 0}),
-                topk({k: v for k, v in hydraulic_values.items() if v > 0}),
+            pct = int(round(priority_fraction * 100))
+            row["priority_fraction"] = priority_fraction
+            row[f"{label}_top{pct}pct_jaccard"] = jaccard(
+                percentile_priority_set(risk_values, priority_fraction)[0],
+                percentile_priority_set(hydraulic_values, priority_fraction)[0],
             )
             total_change = float(hydraulic_change.sum())
             row[f"{label}_outside_scope_share"] = (
@@ -107,8 +109,13 @@ def compare(data_source="historical"):
                 "scenarios": len(detail),
                 "mean_depth_spearman": detail.depth_spearman.mean(),
                 "mean_flooding_spearman": detail.flooding_spearman.mean(),
-                "mean_depth_top3_jaccard": detail.depth_top3_jaccard.mean(),
-                "mean_flooding_top3_jaccard": detail.flooding_top3_jaccard.mean(),
+                "priority_fraction": priority_fraction,
+                "mean_depth_top20pct_jaccard": (
+                    detail.depth_top20pct_jaccard.mean()
+                ),
+                "mean_flooding_top20pct_jaccard": (
+                    detail.flooding_top20pct_jaccard.mean()
+                ),
                 "mean_depth_outside_scope_share": (
                     detail.depth_outside_scope_share.mean()
                 ),

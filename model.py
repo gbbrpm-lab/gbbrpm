@@ -90,19 +90,74 @@ def load_network(network, source="historical"):
 def derive_susceptibility(edges):
     e = edges.copy()
 
-    if (e.C <= 0).any():
-        raise ValueError("C must be > 0")
+    # Primitive L/C inputs take precedence for backward-compatible drainage
+    # runs. Other domains may supply S directly by omitting L and C.
+    if {"L", "C"}.issubset(e.columns):
+        if (e.C <= 0).any():
+            raise ValueError("C must be > 0")
 
-    if (e.L < 0).any():
-        raise ValueError("L must be >= 0")
+        if (e.L < 0).any():
+            raise ValueError("L must be >= 0")
 
-    e["u"] = e.L / e.C
-    e["S"] = e.u.clip(0, 1)
+        e["u"] = e.L / e.C
+        e["S"] = e.u.clip(0, 1)
+        return e
 
-    return e
+    if "S" in e.columns:
+        susceptibility = pd.to_numeric(e["S"], errors="coerce")
+        if susceptibility.isna().any() or (
+            (susceptibility < 0) | (susceptibility > 1)
+        ).any():
+            raise ValueError("S must be numeric and in [0,1]")
+
+        e["S"] = susceptibility.astype(float)
+        if "L" not in e.columns:
+            e["L"] = float("nan")
+        if "C" not in e.columns:
+            e["C"] = float("nan")
+        if "u" not in e.columns:
+            e["u"] = float("nan")
+        return e
+
+    raise ValueError("Edges require either explicit S or both C and L")
 
 
 def evaluate_gbbrpm(nodes, edges):
+    required_node_columns = {"node", "B"}
+    required_edge_columns = {"source", "target"}
+    if not required_node_columns.issubset(nodes.columns):
+        missing = sorted(required_node_columns - set(nodes.columns))
+        raise ValueError(f"Missing node columns: {missing}")
+    if not required_edge_columns.issubset(edges.columns):
+        missing = sorted(required_edge_columns - set(edges.columns))
+        raise ValueError(f"Missing edge columns: {missing}")
+    if "S" not in edges.columns and not {"C", "L"}.issubset(edges.columns):
+        raise ValueError("Edges require either explicit S or both C and L")
+
+    node_ids = nodes["node"].astype(str)
+    if node_ids.duplicated().any():
+        duplicates = sorted(node_ids[node_ids.duplicated(keep=False)].unique())
+        raise ValueError(f"Duplicate node identifiers: {duplicates}")
+
+    node_set = set(node_ids)
+    edge_endpoints = set(edges["source"].astype(str)) | set(
+        edges["target"].astype(str)
+    )
+    missing_endpoints = sorted(edge_endpoints - node_set)
+    if missing_endpoints:
+        raise ValueError(f"Edge endpoints missing from node table: {missing_endpoints}")
+
+    edge_pairs = edges[["source", "target"]].astype(str)
+    if edge_pairs.duplicated().any():
+        duplicates = edge_pairs[edge_pairs.duplicated(keep=False)].drop_duplicates()
+        duplicate_text = [f"{row.source}->{row.target}" for row in duplicates.itertuples()]
+        raise ValueError(f"Duplicate directed edges: {duplicate_text}")
+
+    if "tau" in edges.columns:
+        tau = pd.to_numeric(edges["tau"], errors="coerce")
+        if tau.isna().any() or ((tau < 0) | (tau > 1)).any():
+            raise ValueError("tau must be numeric and in [0,1]")
+
     e = derive_susceptibility(edges)
     G = nx.DiGraph()
     B = {}

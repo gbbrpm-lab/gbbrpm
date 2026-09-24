@@ -1,0 +1,6 @@
+tau,node_count,positive_risk_nodes,max_risk,mean_risk,priority_k_nominal,priority_count_with_ties,priority_cutoff,top_node
+0.0,71,7,0.75,0.045774647887323945,15,7,0.0,npm:body-parser@1.20.1
+0.25,71,7,0.78125,0.050639160548035106,15,7,0.0,npm:body-parser@1.20.1
+0.5,71,7,0.911767840385437,0.05377489916035827,15,7,0.0,npm:express@4.18.2
+0.75,71,7,0.9765684339217842,0.05578793568903921,15,7,0.0,npm:express@4.18.2
+1.0,71,7,0.997528076171875,0.05718349403058979,15,7,0.0,npm:express@4.18.2

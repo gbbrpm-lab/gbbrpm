@@ -5,7 +5,9 @@ Propagation Model (GBBRPM) v1**.
 
 The package runs baseline evaluation, controlled scenario sweeps,
 comparators, robustness and property tests, scalability experiments, and a
-separate SWMM external-reference workflow.
+separate SWMM external-reference workflow. Reporting retains the complete
+ranking and uses a tie-aware top-20% priority set rather than a fixed top
+three.
 
 ## Contents
 
@@ -16,6 +18,7 @@ separate SWMM external-reference workflow.
 - [Controlled scenario suite](#controlled-scenario-suite)
 - [Outputs](#outputs)
 - [SWMM external reference](#swmm-external-reference)
+- [Software dependency case](#software-dependency-case)
 - [Reproducibility notes](#reproducibility-notes)
 - [Repository structure](#repository-structure)
 - [Scope and limitations](#scope-and-limitations)
@@ -169,11 +172,16 @@ Inspect saved outputs and run the smoke test:
 python inspect_results.py
 python tests/smoke_test.py
 python tests/reproducibility_test.py
+python tests/generic_properties_test.py
+python tests/software_case_test.py
+python tests/swmm_reference_test.py
 ```
 
 ## Controlled scenario suite
 
-The restored historical core suite contains 136 scenario runs.
+The expanded core suite contains 161 scenario runs. The first 136 preserve
+the restored historical protocol; the final 25 are the post-consultation
+uniform-transmission sensitivity cases.
 
 | Scenario family | Runs | Protocol |
 | --- | ---: | --- |
@@ -182,13 +190,15 @@ The restored historical core suite contains 136 scenario runs.
 | Blockage location | 36 | Selected blockage locations from the historical protocol. |
 | Source combination | 10 | Multi-source configurations for N3 and N5. |
 | Intermediate blockage | 45 | Three selected nodes, three severities, across five networks. |
-| **Total** | **136** | |
+| Uniform transmission | 25 | Five transmission levels across five networks. |
+| **Total** | **161** | **136 historical cases plus 25 transmission cases.** |
 
 ### Sweep levels
 
 - **Source severity:** `0.25`, `0.50`, `0.75`, `1.00`.
 - **L/C stress:** `0.50`, `0.75`, `1.00`, `1.25`, `1.50`.
 - **Intermediate blockage:** `0.25`, `0.50`, `0.75`.
+- **Uniform transmission:** `0.00`, `0.25`, `0.50`, `0.75`, `1.00`.
 
 The blockage-location sweep evaluates selected locations rather than every
 node in every network.
@@ -203,6 +213,10 @@ The full suite also includes:
 - Randomized boundedness and monotonicity tests.
 - `B = 1 -> R = 1` boundary checks.
 - `S = 0` edge-gating checks.
+- `tau = 0` edge-gating checks.
+- Topological-order and graph-relabeling invariance checks.
+- Zero-state consistency and explicit cycle/endpoint rejection.
+- Deterministic tie handling and 10%, 20%, and 25% priority-set checks.
 - Sparse-DAG scalability timing.
 
 ### Preserved validation behavior
@@ -216,6 +230,9 @@ uniform_S_0.25  ~= -0.0421
 uniform_S_0.50  ~=  0.1504
 uniform_S_0.75  ~=  0.6962
 ```
+
+The corresponding tie-aware top-20% Jaccard values are approximately
+`0.142857`, `0.142857`, `0.000000`, and `0.333333`, respectively.
 
 The historical N5 baseline also reproduces N20 outlet risk near `0.70864`,
 with the key ranking `N13 > N19 > N16`.
@@ -260,17 +277,19 @@ run independently from the stored hydraulic results and writes:
 - `data/swmm/extracted/swmm_comparison_summary.csv`
 
 The comparison protocol represents conduit area loss as a reduction in
-effective GBBRPM edge capacity, ranks positive changes over the union of
-affected nodes, and reports the share of positive hydraulic change outside
-the strictly downstream GBBRPM scope. The stored inputs reproduce mean
+effective GBBRPM edge capacity, defines a common comparison universe as the
+union of nodes affected in either model, computes rank correspondence and
+tie-aware top-20% overlap within that universe, and reports the share of
+positive hydraulic change outside the strictly downstream GBBRPM scope. The
+stored inputs reproduce mean
 outside-scope shares near `0.7120` for maximum depth and `0.4053` for flooding
 volume.
 
 The rank-correlation and top-3 values described as historical or archived in
 the thesis are not asserted as regenerated unless their original calculation
 rule is recovered. The repository now reports the values produced by the
-explicit protocol above instead of silently selecting an undocumented rule
-that happens to reproduce an archived number.
+explicit top-20% protocol above instead of silently selecting an undocumented
+rule that happens to reproduce an archived number.
 
 SWMM is used as an external hydraulic reference to examine:
 
@@ -283,10 +302,50 @@ The comparison treats GBBRPM as a lightweight, interpretable downstream
 risk-propagation and prioritization surrogate, not as a replacement for a
 hydraulic simulator.
 
+## Software dependency case
+
+The frozen npm/Express case under `data/software/express_4.18.2/` examines
+whether the same propagation core can operate on a nonphysical dependency
+network. Its 71 exact package-version nodes and 128 dependency relations come
+from a deps.dev response. Original deps.dev edges point from a dependent
+package to its dependency; the case reverses them so a disturbance propagates
+from a dependency toward packages that rely on it.
+
+Exact package versions were queried through OSV and the complete returned
+advisory records were frozen in `osv_snapshot.json`. The mapping is explicit:
+
+- `B` is the maximum matched categorical severity per exact package version:
+  `LOW=.25`, `MODERATE=.50`, `HIGH=.75`, and `CRITICAL=1.00`.
+- `S=1` denotes an existing resolved dependency relation.
+- `tau` is not claimed as calibrated; it is swept over
+  `0`, `.25`, `.50`, `.75`, and `1.00`.
+
+Rebuild the case from an existing deps.dev response:
+
+```bash
+python scripts/build_software_case.py \
+  --dependencies-json path/to/express_dependencies.json
+python tests/software_case_test.py
+```
+
+Omit `--dependencies-json` to retrieve the default Express 4.18.2 graph from
+deps.dev. Existing frozen OSV data is reused unless `--refresh-osv` is passed.
+Generated results are stored under `results/software/express_4.18.2/`.
+
+This case demonstrates cross-domain applicability, deterministic conversion,
+bounded propagation, multi-source aggregation, and transmission sensitivity.
+OSV supplies the local-disturbance inputs and is therefore not treated as an
+independent outcome reference. In the frozen graph, the seven vulnerable
+versions are Express itself or direct dependencies, so the observed positive
+propagation is concentrated at those nodes and the Express root rather than a
+long transitive chain. See `docs/software_domain_case.md` for the full mapping
+and interpretation boundary.
+
 ## Reproducibility notes
 
-Do not manually enter susceptibility values into the evaluator. For every
-edge, susceptibility is recalculated from the primitive `L` and `C` inputs:
+The generic evaluator accepts either an explicit, domain-supplied `S` or a
+drainage-style `L` and `C` pair. When `S` is absent, susceptibility is
+recalculated from the primitive `L` and `C` inputs:
 
 ```text
 u = L / C
@@ -299,6 +358,9 @@ The evaluator validates:
 - `C > 0`
 - `L >= 0`
 - `B in [0,1]`
+- `tau in [0,1]`
+- Unique node identifiers and directed edges
+- Edge endpoints present in the node table
 - DAG structure
 - Bounded risk contributions
 
@@ -320,8 +382,10 @@ gbbrpm/
 │   ├── historical/
 │   ├── recovered_candidate/
 │   ├── reconstructed/
+│   ├── software/
 │   └── swmm/
 ├── results/
+│   └── software/
 ├── scripts/
 ├── tests/
 ├── model.py
