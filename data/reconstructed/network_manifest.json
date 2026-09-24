@@ -1,0 +1,22 @@
+{
+  "N1": {
+    "outlet": "F",
+    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+  },
+  "N2": {
+    "outlet": "H",
+    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+  },
+  "N3": {
+    "outlet": "H",
+    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+  },
+  "N4": {
+    "outlet": "G",
+    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+  },
+  "N5": {
+    "outlet": "N20",
+    "fixture_status": "reconstructed_fixture_not_original_historical_LC_table"
+  }
+}

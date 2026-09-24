@@ -1,0 +1,30 @@
+{
+  "active_bus_count": 181,
+  "active_edge_records": 177,
+  "active_rule": "NO is open/inactive; NC or unspecified transfer equipment is active",
+  "all_bus_weak_components": 10,
+  "bus_records": 187,
+  "case_id": "electrical_socal28_public_sample",
+  "dag_in_nominal_orientation": true,
+  "direction_semantics": "nominal fbus-to-tbus orientation; measured power-flow direction not yet verified",
+  "distinct_measurement_file_count": 222,
+  "documented_event_group_count": 12,
+  "documented_status_transition_count": 34,
+  "edge_bearing_weak_components": 4,
+  "gbbrpm_execution_status": "not run: event-centered measurements and electrical S/B mapping pending",
+  "isolated_bus_count": 6,
+  "measurement_kind_counts": {
+    "current_magnitude": 119,
+    "real_power": 37,
+    "voltage_magnitude": 70
+  },
+  "measurement_mapping_count": 226,
+  "network_member": "sample_dataset/topology/network_files/circuit3/2023-08-01T00h00m00.000000s.json",
+  "nominal_roots": 21,
+  "nominal_sinks": 51,
+  "role": "topology and baseline preprocessing; event validation pending",
+  "snapshot_time": "2024-11-14T07:00:00",
+  "source_archive": "source_topology.zip",
+  "source_sha256": "d5f91cbce8013ef2afc1dbd392d218d56f7642f9627864a0ab11c0f12d79fc6e",
+  "transfer_equipment_record_count": 203
+}

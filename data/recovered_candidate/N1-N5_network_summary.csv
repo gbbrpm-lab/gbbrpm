@@ -1,0 +1,6 @@
+Network,Nodes,Edges,Sources,Mean_S,Min_S,Max_S,Purpose
+N1_Linear,6,5,1,0.56,0.35,0.8,Attenuation and propagation depth
+N2_Branching,8,7,1,0.5214285714285715,0.3,0.75,Branch divergence and path sensitivity
+N3_Converging,8,7,2,0.6214285714285713,0.5,0.8,Independent multi-source aggregation
+N4_Diamond,7,7,1,0.6357142857142856,0.5,0.75,Reconvergence / overlap stress
+N5_Mixed20,20,27,3,0.6185185185185185,0.45000000000000007,0.9,Main heterogeneous validation network

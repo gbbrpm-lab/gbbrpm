@@ -1,0 +1,2 @@
+scenarios,mean_depth_spearman,mean_flooding_spearman,priority_fraction,mean_depth_top20pct_jaccard,mean_flooding_top20pct_jaccard,mean_depth_outside_scope_share,mean_flooding_outside_scope_share
+12,-0.41601331606578923,-0.48451683519631855,0.2,0.11944444444444445,0.0,0.7120289718284756,0.40525622605363987
