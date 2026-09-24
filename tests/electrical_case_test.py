@@ -63,6 +63,7 @@ with tempfile.TemporaryDirectory() as temporary:
     sample = "t,v\n2024-11-14T07:00:00,100\n2024-11-14T07:00:01,90\n"
     with zipfile.ZipFile(archive_path, "w") as archive:
         archive.writestr("magnitudes/test_voltage.csv", sample)
+        archive.writestr("magnitudes/empty_channel.csv", "")
     sample_mapping = pd.DataFrame(
         [
             {
@@ -77,10 +78,14 @@ with tempfile.TemporaryDirectory() as temporary:
         ]
     )
     summary = summarize_magnitude_archive(archive_path, sample_mapping)
-    assert len(summary) == 1
-    assert summary.loc[0, "row_count"] == 2
-    assert np.isclose(summary.loc[0, "mean"], 95.0)
-    assert np.isclose(summary.loc[0, "mean_per_unit"], 0.95)
+    assert len(summary) == 2
+    empty_summary = summary.loc[summary["data_file"] == "empty_channel"].iloc[0]
+    assert empty_summary["row_count"] == 0
+    assert empty_summary["valid_count"] == 0
+    voltage_summary = summary.loc[summary["data_file"] == "test_voltage"].iloc[0]
+    assert voltage_summary["row_count"] == 2
+    assert np.isclose(voltage_summary["mean"], 95.0)
+    assert np.isclose(voltage_summary["mean_per_unit"], 0.95)
 
 # Exercise event-window response extraction and the tie-aware top-20% flag.
 times = pd.date_range("2024-01-01T00:00:00", periods=181, freq="s")

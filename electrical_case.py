@@ -339,18 +339,19 @@ def summarize_magnitude_archive(
             valid_count = 0
             first_time = None
             last_time = None
-            with archive.open(member) as handle:
-                for chunk in pd.read_csv(handle, chunksize=250_000):
-                    if not {"t", "v"}.issubset(chunk.columns):
-                        raise ValueError(f"Expected t,v columns in {member}")
-                    total_rows += len(chunk)
-                    if len(chunk):
-                        first_time = first_time or str(chunk["t"].iloc[0])
-                        last_time = str(chunk["t"].iloc[-1])
-                    numeric = pd.to_numeric(chunk["v"], errors="coerce").dropna()
-                    valid_count += len(numeric)
-                    if len(numeric):
-                        values.append(numeric.to_numpy(float))
+            if archive.getinfo(member).file_size:
+                with archive.open(member) as handle:
+                    for chunk in pd.read_csv(handle, chunksize=250_000):
+                        if not {"t", "v"}.issubset(chunk.columns):
+                            raise ValueError(f"Expected t,v columns in {member}")
+                        total_rows += len(chunk)
+                        if len(chunk):
+                            first_time = first_time or str(chunk["t"].iloc[0])
+                            last_time = str(chunk["t"].iloc[-1])
+                        numeric = pd.to_numeric(chunk["v"], errors="coerce").dropna()
+                        valid_count += len(numeric)
+                        if len(numeric):
+                            values.append(numeric.to_numpy(float))
 
             array = np.concatenate(values) if values else np.array([], dtype=float)
             data_file = Path(member).stem
