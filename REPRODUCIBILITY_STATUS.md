@@ -10,6 +10,7 @@ python tests/smoke_test.py
 python tests/reproducibility_test.py
 python tests/generic_properties_test.py
 python tests/software_case_test.py
+python tests/electrical_case_test.py
 python tests/swmm_reference_test.py
 python run_experiments.py --data-source historical --trials 600 --seed 41
 python scripts/run_swmm_and_extract.py
@@ -52,6 +53,15 @@ python scripts/compare_swmm_reference.py
 - The software case is verified as cross-domain applicability and structural
   behavior, not as independent outcome validation because OSV supplies its
   local-disturbance inputs.
+- The frozen electrical topology package contains 187 buses, 203 transfer
+  equipment records, 177 active directed connections at the declared
+  snapshot, 226 register mappings, and 34 documented status transitions.
+- The electrical preprocessing tests verify snapshot structure, nominal
+  acyclicity, event grouping, streaming magnitude summaries, event-window
+  response extraction, and tie-aware top-20% reporting.
+- The available one-day magnitude archive is classified as a baseline/import
+  check rather than event-response validation because its coverage begins
+  after the documented November 13, 2024 switching sequence.
 
 ## Archived SWMM ranking metrics
 

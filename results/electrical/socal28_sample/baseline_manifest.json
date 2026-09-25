@@ -1,0 +1,11 @@
+{
+  "created_at_utc": "2026-09-24T16:58:09.049735+00:00",
+  "earliest_measurement": "2024-11-14T07:00:00.000000",
+  "latest_measurement": "2024-11-15T07:00:00.000000",
+  "mapped_file_count": 220,
+  "max_files_limit": null,
+  "role": "normal-operation baseline and importer verification; not event-response validation",
+  "source_archive_name": "magnitudes.zip",
+  "source_archive_sha256": null,
+  "summarized_file_count": 269
+}

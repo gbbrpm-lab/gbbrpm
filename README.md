@@ -19,6 +19,7 @@ three.
 - [Outputs](#outputs)
 - [SWMM external reference](#swmm-external-reference)
 - [Software dependency case](#software-dependency-case)
+- [Electrical distribution case](#electrical-distribution-case)
 - [Reproducibility notes](#reproducibility-notes)
 - [Repository structure](#repository-structure)
 - [Scope and limitations](#scope-and-limitations)
@@ -174,6 +175,7 @@ python tests/smoke_test.py
 python tests/reproducibility_test.py
 python tests/generic_properties_test.py
 python tests/software_case_test.py
+python tests/electrical_case_test.py
 python tests/swmm_reference_test.py
 ```
 
@@ -341,6 +343,48 @@ propagation is concentrated at those nodes and the Express root rather than a
 long transitive chain. See `docs/software_domain_case.md` for the full mapping
 and interpretation boundary.
 
+## Electrical distribution case
+
+The frozen public SoCal sample under `data/electrical/socal28_sample/`
+provides a real electrical topology, time-varying equipment states, and meter
+metadata. At the declared `2024-11-14T07:00:00` snapshot, the deterministic
+converter produces 187 buses, 203 transfer-equipment relations, 177 active
+directed connections, 34 documented state transitions, and 222 distinct
+mapped measurement filenames. The nominal `fbus -> tbus` orientation is a
+DAG, but its physical flow direction remains to be checked against
+measurements.
+
+Rebuild the topology package and test the preprocessing logic:
+
+```bash
+python scripts/build_electrical_case.py \
+  --topology-source path/to/sample_dataset.zip
+python tests/electrical_case_test.py
+```
+
+Summarize the large magnitude archive locally without extracting it:
+
+```bash
+python scripts/summarize_electrical_baseline.py \
+  --magnitudes-zip path/to/magnitudes.zip
+```
+
+After event-centered measurements are approved and downloaded, produce the
+independent observed-response ranking with:
+
+```bash
+python scripts/analyze_electrical_events.py \
+  --measurements path/to/event_opening path/to/event_restoration
+```
+
+The one-day magnitude archive starts after the documented November 13, 2024
+switching sequence, so it supports importer and normal-baseline checks rather
+than event-response validation. GBBRPM is deliberately not executed for this
+case until electrical definitions of `B`, `S`, and `tau` are declared without
+leaking the observed outcome into both model input and validation target. See
+`docs/electrical_domain_case.md` for the complete protocol and validation
+gates.
+
 ## Reproducibility notes
 
 The generic evaluator accepts either an explicit, domain-supplied `S` or a
@@ -380,11 +424,13 @@ not ground truth or a replacement formulation.
 gbbrpm/
 ├── data/
 │   ├── historical/
+│   ├── electrical/
 │   ├── recovered_candidate/
 │   ├── reconstructed/
 │   ├── software/
 │   └── swmm/
 ├── results/
+│   ├── electrical/
 │   └── software/
 ├── scripts/
 ├── tests/
