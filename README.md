@@ -369,6 +369,14 @@ python scripts/summarize_electrical_baseline.py \
   --magnitudes-zip path/to/magnitudes.zip
 ```
 
+The baseline output distinguishes missing values from missing timestamps and
+entirely empty channel files. Per-unit voltage summaries use only 60 direct
+phase-to-ground mappings. Six signed or arithmetically derived voltage
+registers are preserved as raw summaries but excluded from normalization and
+event-response ranking. Two explicit `CT16 -> C16` filename aliases reconcile
+the corresponding archive/topology naming mismatch while preserving both
+source names in the output.
+
 After event-centered measurements are approved and downloaded, produce the
 independent observed-response ranking with:
 

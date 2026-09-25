@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from collections import Counter
 import hashlib
 import io
 import json
@@ -30,6 +31,15 @@ TRANSFER_TYPES = (
 
 CLOSED_STATUS = "NC"
 OPEN_STATUS = "NO"
+
+# The frozen topology declares these two data_file values as C16, while the
+# public magnitude archive names the corresponding files CT16. Preserve both
+# source forms and resolve the mismatch explicitly rather than rewriting either
+# source artifact.
+MEASUREMENT_FILE_ALIASES = {
+    "egauge_22-CT16": "egauge_22-C16",
+    "egauge_23-CT16": "egauge_23-C16",
+}
 
 
 def sha256(path: Path) -> str:
@@ -212,6 +222,27 @@ def build_topology_tables(
                     "element_reference": element_ref,
                     "base_element": base_element,
                     "nominal_voltage": nominal_voltage,
+                    "register_expression": register.get("value", ""),
+                    "measurement_semantics": (
+                        "direct_phase_to_ground_voltage_magnitude"
+                        if unit == "V"
+                        and re.search(r"\.(?:ag|bg|cg)$", element_ref)
+                        and re.fullmatch(r"L[123]", str(register.get("value", "")))
+                        else "unbound_voltage_register"
+                        if unit == "V" and (not data_file or not element_ref)
+                        else "derived_or_signed_voltage_channel"
+                        if unit == "V"
+                        else "current_magnitude"
+                        if unit == "A"
+                        else "real_power"
+                        if unit == "W"
+                        else "other"
+                    ),
+                    "voltage_response_eligible": bool(
+                        unit == "V"
+                        and re.search(r"\.(?:ag|bg|cg)$", element_ref)
+                        and re.fullmatch(r"L[123]", str(register.get("value", "")))
+                    ),
                     "rating": register.get("I_rating", np.nan),
                     "groups": "|".join(meter.get("groups", [])),
                 }
@@ -312,8 +343,33 @@ def _mapping_lookup(mapping: pd.DataFrame) -> dict[str, dict]:
     for row in mapping.to_dict("records"):
         data_file = str(row.get("data_file", ""))
         if data_file and data_file not in lookup:
-            lookup[data_file] = row
+            mapped = dict(row)
+            mapped["_declared_data_file"] = data_file
+            mapped["_mapping_method"] = "declared_data_file"
+            lookup[data_file] = mapped
+    for archive_name, declared_name in MEASUREMENT_FILE_ALIASES.items():
+        if declared_name in lookup and archive_name not in lookup:
+            mapped = dict(lookup[declared_name])
+            mapped["_declared_data_file"] = declared_name
+            mapped["_mapping_method"] = "explicit_source_filename_alias"
+            lookup[archive_name] = mapped
     return lookup
+
+
+def _as_bool(value: object, default: bool = False) -> bool:
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+
+def _voltage_response_eligible(metadata: dict) -> bool:
+    """Conservatively accept direct phase-to-ground voltage magnitudes only."""
+    if "voltage_response_eligible" in metadata:
+        return _as_bool(metadata.get("voltage_response_eligible"))
+    channel = str(metadata.get("channel", ""))
+    return bool(re.fullmatch(r"L[123]", channel))
 
 
 def summarize_magnitude_archive(
@@ -337,21 +393,59 @@ def summarize_magnitude_archive(
             values = []
             total_rows = 0
             valid_count = 0
-            first_time = None
-            last_time = None
-            if archive.getinfo(member).file_size:
-                with archive.open(member) as handle:
-                    for chunk in pd.read_csv(handle, chunksize=250_000):
-                        if not {"t", "v"}.issubset(chunk.columns):
-                            raise ValueError(f"Expected t,v columns in {member}")
-                        total_rows += len(chunk)
-                        if len(chunk):
-                            first_time = first_time or str(chunk["t"].iloc[0])
-                            last_time = str(chunk["t"].iloc[-1])
-                        numeric = pd.to_numeric(chunk["v"], errors="coerce").dropna()
-                        valid_count += len(numeric)
-                        if len(numeric):
-                            values.append(numeric.to_numpy(float))
+            invalid_timestamp_count = 0
+            duplicate_timestamp_count = 0
+            out_of_order_timestamp_count = 0
+            first_timestamp = None
+            last_timestamp = None
+            previous_timestamp = None
+            positive_delta_seconds: Counter[float] = Counter()
+            with archive.open(member) as handle:
+                try:
+                    chunks = pd.read_csv(handle, chunksize=250_000)
+                except pd.errors.EmptyDataError:
+                    chunks = ()
+                for chunk in chunks:
+                    if not {"t", "v"}.issubset(chunk.columns):
+                        raise ValueError(f"Expected t,v columns in {member}")
+                    total_rows += len(chunk)
+                    timestamps = pd.to_datetime(chunk["t"], errors="coerce")
+                    invalid_timestamp_count += int(timestamps.isna().sum())
+                    valid_timestamps = timestamps.dropna()
+                    if not valid_timestamps.empty:
+                        current_first = pd.Timestamp(valid_timestamps.iloc[0])
+                        current_last = pd.Timestamp(valid_timestamps.iloc[-1])
+                        if first_timestamp is None:
+                            first_timestamp = current_first
+                        if previous_timestamp is not None:
+                            boundary_delta = (
+                                current_first - previous_timestamp
+                            ).total_seconds()
+                            if boundary_delta == 0:
+                                duplicate_timestamp_count += 1
+                            elif boundary_delta < 0:
+                                out_of_order_timestamp_count += 1
+                            else:
+                                positive_delta_seconds[round(boundary_delta, 9)] += 1
+
+                        deltas = (
+                            valid_timestamps.diff().dt.total_seconds().iloc[1:]
+                        )
+                        duplicate_timestamp_count += int((deltas == 0).sum())
+                        out_of_order_timestamp_count += int((deltas < 0).sum())
+                        positive_counts = deltas.loc[deltas > 0].round(9).value_counts()
+                        positive_delta_seconds.update(
+                            {
+                                float(delta): int(count)
+                                for delta, count in positive_counts.items()
+                            }
+                        )
+                        previous_timestamp = current_last
+                        last_timestamp = current_last
+                    numeric = pd.to_numeric(chunk["v"], errors="coerce").dropna()
+                    valid_count += len(numeric)
+                    if len(numeric):
+                        values.append(numeric.to_numpy(float))
 
             array = np.concatenate(values) if values else np.array([], dtype=float)
             data_file = Path(member).stem
@@ -367,21 +461,88 @@ def summarize_magnitude_archive(
                 if len(array)
                 else [np.nan, np.nan, np.nan]
             )
+            sampling_interval = (
+                positive_delta_seconds.most_common(1)[0][0]
+                if positive_delta_seconds
+                else np.nan
+            )
+            valid_timestamp_count = total_rows - invalid_timestamp_count
+            unique_timestamp_count = max(
+                0, valid_timestamp_count - duplicate_timestamp_count
+            )
+            if (
+                first_timestamp is not None
+                and last_timestamp is not None
+                and pd.notna(sampling_interval)
+                and float(sampling_interval) > 0
+            ):
+                expected_timestamp_count = int(
+                    round(
+                        (last_timestamp - first_timestamp).total_seconds()
+                        / float(sampling_interval)
+                    )
+                ) + 1
+                missing_timestamp_count = max(
+                    0, expected_timestamp_count - unique_timestamp_count
+                )
+                timestamp_coverage_fraction = (
+                    unique_timestamp_count / expected_timestamp_count
+                    if expected_timestamp_count
+                    else np.nan
+                )
+            else:
+                expected_timestamp_count = 0
+                missing_timestamp_count = 0
+                timestamp_coverage_fraction = np.nan
+
+            measurement_kind = metadata.get("measurement_kind", "unmapped")
+            voltage_eligible = (
+                measurement_kind == "voltage_magnitude"
+                and _voltage_response_eligible(metadata)
+            )
+            if total_rows == 0:
+                per_unit_status = "not_available_empty_channel"
+            elif measurement_kind != "voltage_magnitude":
+                per_unit_status = "not_applicable"
+            elif not voltage_eligible:
+                per_unit_status = "excluded_derived_or_signed_voltage"
+            elif pd.isna(nominal) or float(nominal) <= 0:
+                per_unit_status = "not_available_missing_nominal_voltage"
+            else:
+                per_unit_status = "available"
             rows.append(
                 {
                     "data_file": data_file,
                     "archive_member": member,
+                    "declared_data_file": metadata.get("_declared_data_file", ""),
+                    "mapping_method": metadata.get("_mapping_method", "unmapped"),
                     "meter": metadata.get("meter", ""),
                     "channel": metadata.get("channel", ""),
-                    "measurement_kind": metadata.get("measurement_kind", "unmapped"),
+                    "measurement_kind": measurement_kind,
+                    "measurement_semantics": metadata.get(
+                        "measurement_semantics", "unmapped"
+                    ),
+                    "voltage_response_eligible": voltage_eligible,
                     "unit": metadata.get("unit", ""),
                     "base_element": metadata.get("base_element", ""),
                     "nominal_voltage": nominal,
-                    "start_time": first_time,
-                    "end_time": last_time,
+                    "data_status": "populated" if total_rows else "empty",
+                    "start_time": (
+                        first_timestamp.isoformat() if first_timestamp is not None else None
+                    ),
+                    "end_time": (
+                        last_timestamp.isoformat() if last_timestamp is not None else None
+                    ),
                     "row_count": total_rows,
                     "valid_count": valid_count,
-                    "missing_count": total_rows - valid_count,
+                    "missing_value_count": total_rows - valid_count,
+                    "invalid_timestamp_count": invalid_timestamp_count,
+                    "duplicate_timestamp_count": duplicate_timestamp_count,
+                    "out_of_order_timestamp_count": out_of_order_timestamp_count,
+                    "sampling_interval_seconds": sampling_interval,
+                    "expected_timestamp_count": expected_timestamp_count,
+                    "missing_timestamp_count": missing_timestamp_count,
+                    "timestamp_coverage_fraction": timestamp_coverage_fraction,
                     "minimum": float(array.min()) if len(array) else np.nan,
                     "p05": float(quantiles[0]),
                     "mean": mean,
@@ -389,9 +550,10 @@ def summarize_magnitude_archive(
                     "p95": float(quantiles[2]),
                     "maximum": float(array.max()) if len(array) else np.nan,
                     "standard_deviation": std,
+                    "per_unit_status": per_unit_status,
                     "mean_per_unit": (
                         mean / float(nominal)
-                        if pd.notna(nominal) and float(nominal) > 0 and pd.notna(mean)
+                        if per_unit_status == "available" and pd.notna(mean)
                         else np.nan
                     ),
                 }
@@ -503,6 +665,11 @@ def analyze_event_responses(
                 "real_power",
             }:
                 continue
+            if (
+                metadata.get("measurement_kind") == "voltage_magnitude"
+                and not _voltage_response_eligible(metadata)
+            ):
+                continue
             before = frame.loc[
                 (frame["t"] >= before_start) & (frame["t"] < before_end), "v"
             ].dropna()
@@ -522,6 +689,8 @@ def analyze_event_responses(
                 "event_end": end.isoformat(),
                 "operations": event["operations"],
                 "data_file": data_file,
+                "declared_data_file": metadata.get("_declared_data_file", ""),
+                "mapping_method": metadata.get("_mapping_method", "unmapped"),
                 "meter": metadata.get("meter", ""),
                 "channel": metadata.get("channel", ""),
                 "base_element": metadata.get("base_element", ""),

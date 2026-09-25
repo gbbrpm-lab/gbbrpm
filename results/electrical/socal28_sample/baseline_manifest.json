@@ -1,11 +1,35 @@
 {
-  "created_at_utc": "2026-09-24T16:58:09.049735+00:00",
-  "earliest_measurement": "2024-11-14T07:00:00.000000",
-  "latest_measurement": "2024-11-15T07:00:00.000000",
-  "mapped_file_count": 220,
+  "created_at_utc": "2026-09-25T04:56:27.172776+00:00",
+  "duplicate_timestamp_count": 0,
+  "earliest_measurement": "2024-11-14T07:00:00",
+  "empty_file_count": 38,
+  "explicit_alias_match_count": 2,
+  "explicit_alias_matches": [
+    {
+      "archive_data_file": "egauge_22-CT16",
+      "declared_data_file": "egauge_22-C16"
+    },
+    {
+      "archive_data_file": "egauge_23-CT16",
+      "declared_data_file": "egauge_23-C16"
+    }
+  ],
+  "invalid_timestamp_count": 0,
+  "latest_measurement": "2024-11-15T07:00:00",
+  "mapped_file_count": 222,
+  "mapping_rule": "exact declared data_file match first; then the documented CT16-to-C16 source filename aliases; unmatched archive files remain visible as unmapped",
   "max_files_limit": null,
+  "missing_timestamp_count": 337761,
+  "missing_value_count": 0,
+  "missingness_semantics": "missing_value_count counts invalid/blank values in present rows; missing_timestamp_count counts absent intervals at each channel's inferred modal sampling cadence",
+  "out_of_order_timestamp_count": 0,
+  "populated_file_count": 231,
   "role": "normal-operation baseline and importer verification; not event-response validation",
   "source_archive_name": "magnitudes.zip",
-  "source_archive_sha256": null,
-  "summarized_file_count": 269
+  "source_archive_sha256": "15619f36d7c300db4122ce5568d304de1d1e9fbc89d12e29db1dcf38906b6eb6",
+  "summarized_file_count": 269,
+  "timestamp_coverage_fraction": 0.9830769455079359,
+  "unmapped_file_count": 47,
+  "voltage_normalization_rule": "per-unit values and event rankings use only direct phase-to-ground voltage magnitude registers; derived or signed voltage expressions are retained as raw summaries but excluded",
+  "voltage_response_eligible_file_count": 60
 }

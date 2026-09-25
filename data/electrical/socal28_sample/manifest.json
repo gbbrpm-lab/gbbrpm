@@ -6,6 +6,7 @@
   "bus_records": 187,
   "case_id": "electrical_socal28_public_sample",
   "dag_in_nominal_orientation": true,
+  "derived_or_signed_voltage_mapping_count": 6,
   "direction_semantics": "nominal fbus-to-tbus orientation; measured power-flow direction not yet verified",
   "distinct_measurement_file_count": 222,
   "documented_event_group_count": 12,
@@ -26,5 +27,6 @@
   "snapshot_time": "2024-11-14T07:00:00",
   "source_archive": "source_topology.zip",
   "source_sha256": "d5f91cbce8013ef2afc1dbd392d218d56f7642f9627864a0ab11c0f12d79fc6e",
-  "transfer_equipment_record_count": 203
+  "transfer_equipment_record_count": 203,
+  "voltage_response_eligible_mapping_count": 60
 }

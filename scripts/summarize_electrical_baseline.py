@@ -68,6 +68,42 @@ def main() -> None:
         ),
         "summarized_file_count": int(len(summary)),
         "mapped_file_count": int((summary["measurement_kind"] != "unmapped").sum()),
+        "unmapped_file_count": int((summary["measurement_kind"] == "unmapped").sum()),
+        "explicit_alias_match_count": int(
+            (summary["mapping_method"] == "explicit_source_filename_alias").sum()
+        ),
+        "explicit_alias_matches": [
+            {
+                "archive_data_file": str(row.data_file),
+                "declared_data_file": str(row.declared_data_file),
+            }
+            for row in summary.loc[
+                summary["mapping_method"] == "explicit_source_filename_alias"
+            ].itertuples(index=False)
+        ],
+        "populated_file_count": int((summary["data_status"] == "populated").sum()),
+        "empty_file_count": int((summary["data_status"] == "empty").sum()),
+        "voltage_response_eligible_file_count": int(
+            summary["voltage_response_eligible"].fillna(False).astype(bool).sum()
+        ),
+        "missing_value_count": int(summary["missing_value_count"].sum()),
+        "invalid_timestamp_count": int(summary["invalid_timestamp_count"].sum()),
+        "duplicate_timestamp_count": int(summary["duplicate_timestamp_count"].sum()),
+        "out_of_order_timestamp_count": int(
+            summary["out_of_order_timestamp_count"].sum()
+        ),
+        "missing_timestamp_count": int(summary["missing_timestamp_count"].sum()),
+        "timestamp_coverage_fraction": (
+            float(
+                (
+                    summary["expected_timestamp_count"].sum()
+                    - summary["missing_timestamp_count"].sum()
+                )
+                / summary["expected_timestamp_count"].sum()
+            )
+            if summary["expected_timestamp_count"].sum() > 0
+            else None
+        ),
         "earliest_measurement": (
             str(summary["start_time"].dropna().min()) if len(summary) else None
         ),
@@ -76,6 +112,20 @@ def main() -> None:
         ),
         "max_files_limit": args.max_files,
         "role": "normal-operation baseline and importer verification; not event-response validation",
+        "missingness_semantics": (
+            "missing_value_count counts invalid/blank values in present rows; "
+            "missing_timestamp_count counts absent intervals at each channel's "
+            "inferred modal sampling cadence"
+        ),
+        "voltage_normalization_rule": (
+            "per-unit values and event rankings use only direct phase-to-ground "
+            "voltage magnitude registers; derived or signed voltage expressions "
+            "are retained as raw summaries but excluded"
+        ),
+        "mapping_rule": (
+            "exact declared data_file match first; then the documented CT16-to-C16 "
+            "source filename aliases; unmatched archive files remain visible as unmapped"
+        ),
     }
     with (output_dir / "baseline_manifest.json").open(
         "w", encoding="utf-8", newline="\n"
