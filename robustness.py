@@ -1,13 +1,23 @@
 import numpy as np, pandas as pd
 
 from model import evaluate_gbbrpm
-from metrics import spearman, topk, jaccard
+from metrics import jaccard, percentile_priority_set, spearman
 
 
-def perturbation_trials(nodes, edges, pct=0.05, trials=100, seed=41, k=3):
+def perturbation_trials(
+    nodes,
+    edges,
+    pct=0.05,
+    trials=100,
+    seed=41,
+    priority_fraction=0.20,
+):
     rng = np.random.default_rng(seed)
     baseline = evaluate_gbbrpm(nodes, edges)[0]
-    bt = topk(baseline, k)
+    baseline_priority, nominal_k, _ = percentile_priority_set(
+        baseline, priority_fraction
+    )
+    label = f"top_{int(round(priority_fraction * 100))}pct_jaccard"
     rows = []
 
     for t in range(trials):
@@ -27,25 +37,30 @@ def perturbation_trials(nodes, edges, pct=0.05, trials=100, seed=41, k=3):
         )
 
         r = evaluate_gbbrpm(n, e)[0]
+        perturbed_priority, _, _ = percentile_priority_set(r, priority_fraction)
         rows.append(
             {
                 "pct": pct,
                 "trial": t,
                 "seed": seed,
+                "priority_fraction": priority_fraction,
+                "priority_k_nominal": nominal_k,
                 "spearman": spearman(baseline, r),
-                f"top{k}_jaccard": jaccard(bt, topk(r, k)),
+                label: jaccard(baseline_priority, perturbed_priority),
             }
         )
 
     return pd.DataFrame(rows)
 
 
-def summarize_robustness(df, k=3):
-    c = f"top{k}_jaccard"
-    
+def summarize_robustness(df):
+    priority_fraction = float(df.priority_fraction.iloc[0])
+    c = f"top_{int(round(priority_fraction * 100))}pct_jaccard"
     return {
         "pct": float(df.pct.iloc[0]),
         "trials": len(df),
+        "priority_fraction": priority_fraction,
+        "priority_k_nominal": int(df.priority_k_nominal.iloc[0]),
         "mean_spearman": float(df.spearman.mean()),
         "p05_spearman": float(df.spearman.quantile(0.05)),
         "p95_spearman": float(df.spearman.quantile(0.95)),

@@ -76,6 +76,33 @@ def lc_stress_sweep( network, nodes, edges, outlet, scales=(0.50, 0.75, 1.00, 1.
     return rows
 
 
+def transmission_sweep(
+    network,
+    nodes,
+    edges,
+    outlet,
+    levels=(0.00, 0.25, 0.50, 0.75, 1.00),
+):
+    """Apply uniform tau values as sensitivity cases, not calibrated values."""
+    rows = []
+
+    for level in levels:
+        e = edges.copy()
+        e["tau"] = float(level)
+        risk, _ = evaluate_gbbrpm(nodes, e)
+        rows.append(
+            _row(
+                network,
+                "transmission",
+                level,
+                risk,
+                outlet,
+            )
+        )
+
+    return rows
+
+
 def location_sweep( network, nodes, edges, outlet, severity=0.75,):
     if network not in LOCATION_NODES:
         raise ValueError(f"No historical blockage-location definition for {network}")
@@ -194,5 +221,6 @@ def run_core_scenarios( network, nodes, edges, outlet,):
         rows += source_combination_sweep( network, nodes, edges, outlet,)
 
     rows += intermediate_blockage_sweep( network, nodes, edges, outlet,)
+    rows += transmission_sweep(network, nodes, edges, outlet)
 
     return rows

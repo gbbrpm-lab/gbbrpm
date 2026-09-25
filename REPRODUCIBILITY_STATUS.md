@@ -1,6 +1,6 @@
 # Reproducibility Status
 
-Verified on 2026-09-19 from a clean Python virtual environment.
+Verified on 2026-09-24 from an isolated Python virtual environment.
 
 ## Commands
 
@@ -8,6 +8,8 @@ Verified on 2026-09-19 from a clean Python virtual environment.
 pip install -r requirements.txt
 python tests/smoke_test.py
 python tests/reproducibility_test.py
+python tests/generic_properties_test.py
+python tests/software_case_test.py
 python tests/swmm_reference_test.py
 python run_experiments.py --data-source historical --trials 600 --seed 41
 python scripts/run_swmm_and_extract.py
@@ -17,9 +19,18 @@ python scripts/compare_swmm_reference.py
 ## Verified results
 
 - All five historical networks load and produce bounded node states.
-- The controlled scenario suite contains 136 rows.
+- The controlled scenario suite contains 161 rows: the preserved 136-case
+  historical protocol plus 25 uniform-transmission sensitivity cases.
+- All deterministic generic checks pass for topological-order invariance,
+  graph relabeling, zero-state consistency, edge gating, cycle and endpoint
+  rejection, deterministic ties, and proportional priority-set expansion.
 - The N5 comparator correlations reproduce the preserved values.
 - All four property checks pass in 600 of 600 randomized trials.
+- The N5 comparator top-20% Jaccard values are 0.142857, 0.142857,
+  0.000000, and 0.333333 for local-only and uniform susceptibility 0.25,
+  0.50, and 0.75, respectively.
+- Mean top-20% Jaccard robustness is 0.776000, 0.604873, and 0.440823
+  under +/-5%, +/-10%, and +/-20% perturbation.
 - Robustness summaries reproduce the Chapter 4 values at all three
   perturbation levels.
 - The path-pruned diagnostic reproduces the N3, N4, and N5 overlap-inflation
@@ -29,6 +40,18 @@ python scripts/compare_swmm_reference.py
 - The explicit SWMM comparison reproduces mean outside-downstream-scope shares
   of approximately 0.7120 for maximum-depth worsening and 0.4053 for
   flooding-volume worsening.
+- The explicit SWMM comparison produces mean tie-aware top-20% Jaccard values
+  of 0.119444 for maximum-depth change and 0.000000 for flooding-volume
+  change over each scenario's common affected-node comparison universe.
+- The frozen Express 4.18.2 software case contains 71 exact package-version
+  nodes and 128 reversed dependency edges in one weakly connected DAG.
+- The frozen OSV snapshot identifies 13 advisory matches across seven exact
+  package versions. The case accepts explicit domain-supplied `S`, remains
+  bounded across the five declared transmission levels, and reproduces an
+  Express root risk of 0.997528076171875 at `tau=1`.
+- The software case is verified as cross-domain applicability and structural
+  behavior, not as independent outcome validation because OSV supplies its
+  local-disturbance inputs.
 
 ## Archived SWMM ranking metrics
 
@@ -36,9 +59,9 @@ The thesis contains archived SWMM rank-correlation and top-3 Jaccard values
 whose original calculation script and complete ranking rule were not present
 in the recovered repository. They are not silently relabeled as regenerated.
 The current `scripts/compare_swmm_reference.py` states and executes one
-complete protocol, and its generated summary is the reproducible result of
-that protocol. The archived values should remain labeled historical unless
-their original calculation artifact is recovered.
+complete tie-aware top-20% protocol, and its generated summary is the
+reproducible result of that protocol. The archived values should remain
+labeled historical unless their original calculation artifact is recovered.
 
 ## Timing interpretation
 
