@@ -396,8 +396,8 @@ gates.
 
 ## Reproducible paper outputs
 
-Generate the three-domain publication figures and LaTeX tables from frozen
-results with:
+Generate all data-derived Layer 1 and cross-domain publication figures, plus
+the cross-domain LaTeX tables, from frozen results with:
 
 ```bash
 python scripts/generate_paper_outputs.py
@@ -405,8 +405,9 @@ python tests/paper_outputs_test.py
 ```
 
 The command writes vector PDFs, 300-dpi PNG previews, `booktabs` table files,
-and an input/output hash manifest under `results/paper/`. The six figure
-designs and eight tables cover the drainage, software, and electrical cases.
+and an input/output hash manifest under `results/paper/`. The thirteen figure
+designs and eight tables cover the Layer 1, drainage, software, and electrical
+results.
 See `docs/paper_outputs.md` for their intended evidentiary roles and the
 electrical validation boundary.
 
