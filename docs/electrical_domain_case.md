@@ -50,9 +50,37 @@ python scripts/summarize_electrical_baseline.py \
 ```
 
 It writes `baseline_channel_summary.csv` and `baseline_manifest.json` under
-`results/electrical/socal28_sample/`. The summary reports coverage, missing
-values, quantiles, dispersion, and voltage mean in per-unit form where a
-nominal voltage is mapped.
+`results/electrical/socal28_sample/`. The summary distinguishes three data
+quality conditions that must not be conflated:
+
+- `missing_value_count`: blank or nonnumeric values in rows that exist;
+- `missing_timestamp_count`: absent intervals relative to the channel's
+  inferred modal sampling cadence; and
+- `data_status=empty`: a zero-byte, header-only, or otherwise observation-free
+  channel file.
+
+The summary also reports timestamp coverage, duplicates, out-of-order records,
+quantiles, dispersion, and voltage mean in per-unit form where normalization is
+eligible. Unmapped files remain in the summary so exclusions are visible.
+
+Two explicit filename aliases reconcile a documented source inconsistency:
+the topology declares `egauge_22-C16` and `egauge_23-C16`, while the magnitude
+archive uses `egauge_22-CT16` and `egauge_23-CT16`. Exact declared filenames
+remain the first matching rule. The importer then applies only these two
+documented aliases, preserves both names in the output, and labels the match as
+`mapping_method=explicit_source_filename_alias`. Neither frozen source is
+renamed or modified.
+
+### Voltage-channel eligibility
+
+Per-unit summaries and the event-response ranking use only direct
+phase-to-ground magnitude registers (`L1`, `L2`, or `L3`) with mapped nominal
+voltage. Six source registers on `egauge_17` and `egauge_18` (`V_ab`, `V_bc`,
+and `V_ca`) are defined by signed or arithmetic expressions in the topology
+metadata. Their values are retained for traceability, but they receive
+`per_unit_status=excluded_derived_or_signed_voltage` and are excluded from the
+observed-response ranking. This prevents signed derived channels from being
+silently interpreted as ordinary voltage magnitudes.
 
 ## Event-response analysis after approval
 
@@ -68,9 +96,10 @@ For each documented operation group, the script compares median measurements
 in a 60-second pre-event window and a 60-second post-event window, separated
 from the operation by a five-second guard interval. Voltage responses are
 normalized by nominal voltage; power responses retain both absolute and
-relative change. Bus-level voltage response is the maximum phase-channel
-change. The script reports the complete ranking and a tie-aware top-20%
-priority set, consistent with the generic reporting convention.
+relative change. Bus-level voltage response is the maximum change among
+eligible direct phase-to-ground channels. The script reports the complete
+ranking and a tie-aware top-20% priority set, consistent with the generic
+reporting convention.
 
 This observed-response ranking is an independent comparison target. A later
 GBBRPM instantiation must separately declare and justify electrical meanings

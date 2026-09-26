@@ -98,6 +98,15 @@ def main() -> None:
             str(kind): int(count)
             for kind, count in meter_mapping.groupby("measurement_kind").size().items()
         },
+        "voltage_response_eligible_mapping_count": int(
+            meter_mapping["voltage_response_eligible"].fillna(False).astype(bool).sum()
+        ),
+        "derived_or_signed_voltage_mapping_count": int(
+            (
+                meter_mapping["measurement_semantics"]
+                == "derived_or_signed_voltage_channel"
+            ).sum()
+        ),
         "documented_status_transition_count": int(len(events)),
         "documented_event_group_count": int(len(event_groups)),
         "gbbrpm_execution_status": "not run: event-centered measurements and electrical S/B mapping pending",

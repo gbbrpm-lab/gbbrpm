@@ -57,8 +57,11 @@ python scripts/compare_swmm_reference.py
   equipment records, 177 active directed connections at the declared
   snapshot, 226 register mappings, and 34 documented status transitions.
 - The electrical preprocessing tests verify snapshot structure, nominal
-  acyclicity, event grouping, streaming magnitude summaries, event-window
-  response extraction, and tie-aware top-20% reporting.
+  acyclicity, event grouping, streaming magnitude summaries, value and
+  timestamp missingness, zero-byte and header-only empty-channel
+  classification, explicit source-filename aliasing, voltage-channel
+  eligibility, event-window response extraction, and tie-aware top-20%
+  reporting.
 - The available one-day magnitude archive is classified as a baseline/import
   check rather than event-response validation because its coverage begins
   after the documented November 13, 2024 switching sequence.
