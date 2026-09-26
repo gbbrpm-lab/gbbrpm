@@ -35,6 +35,16 @@ SLATE = "#64748B"
 LIGHT = "#CBD5E1"
 PALE = "#E2E8F0"
 
+NETWORKS = ["N1", "N2", "N3", "N4", "N5"]
+NETWORK_COLORS = {
+    "N1": "#17365D",
+    "N2": "#B24A3B",
+    "N3": "#6F8F3D",
+    "N4": "#76538D",
+    "N5": "#2F8FA8",
+}
+NETWORK_MARKERS = {"N1": "o", "N2": "s", "N3": "^", "N4": "D", "N5": "v"}
+
 
 def configure_style() -> None:
     mpl.rcParams.update(
@@ -147,6 +157,221 @@ def write_table(
     path = TABLE_DIR / filename
     path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return path
+
+
+def layer1_outputs() -> tuple[list[Path], dict]:
+    """Generate the data-derived Layer 1 figures used in Chapter 4.
+
+    The publication layer reads committed experiment results only. It does not
+    rerun the evaluator, robustness trials, diagnostics, or timing benchmark.
+    """
+
+    nodes = pd.read_csv(
+        require(ROOT / "data" / "historical" / "validation_reconstructed_nodes.csv")
+    )
+    core = pd.read_csv(require(ROOT / "results" / "core_scenarios.csv"))
+    reconvergence = pd.read_csv(require(ROOT / "results" / "reconvergence_summary.csv"))
+    scalability = pd.read_csv(require(ROOT / "results" / "scalability.csv"))
+
+    figures: list[Path] = []
+    outlet_nodes: dict[str, str] = {}
+    outlet_risks: dict[str, float] = {}
+
+    for network in NETWORKS:
+        network_nodes = nodes.loc[nodes["Network"] == network]
+        outlet_rows = network_nodes.loc[network_nodes["Outlet"].astype(bool), "Node"]
+        if len(outlet_rows) != 1:
+            raise ValueError(
+                f"Expected exactly one declared outlet for {network}; found {len(outlet_rows)}"
+            )
+        outlet = str(outlet_rows.iloc[0])
+        risk = pd.read_csv(
+            require(ROOT / "results" / f"{network}_baseline_node_risk.csv")
+        )
+        outlet_match = risk.loc[risk["node"].astype(str) == outlet, "R"]
+        if len(outlet_match) != 1:
+            raise ValueError(
+                f"Expected one baseline risk for outlet {outlet} in {network}; "
+                f"found {len(outlet_match)}"
+            )
+        outlet_nodes[network] = outlet
+        outlet_risks[network] = float(outlet_match.iloc[0])
+
+    fig, ax = plt.subplots(figsize=(7.16, 3.15))
+    bars = ax.bar(
+        NETWORKS,
+        [outlet_risks[network] for network in NETWORKS],
+        color=[NETWORK_COLORS[network] for network in NETWORKS],
+        width=0.64,
+    )
+    ax.set(xlabel="Controlled network", ylabel="Outlet risk index", ylim=(0, 0.80))
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
+    ax.bar_label(bars, fmt="%.4f", padding=2, fontsize=7)
+    figures += save_figure(fig, "fig_layer1_baseline_outlet_risk")
+
+    severity = core.loc[core["scenario_family"] == "severity"].copy()
+    severity["parameter"] = pd.to_numeric(severity["parameter"])
+    fig, ax = plt.subplots(figsize=(7.16, 3.25))
+    for network in NETWORKS:
+        rows = severity.loc[severity["network"] == network].sort_values("parameter")
+        ax.plot(
+            rows["parameter"],
+            rows["outlet_risk"],
+            label=network,
+            color=NETWORK_COLORS[network],
+            marker=NETWORK_MARKERS[network],
+        )
+    ax.set(
+        xlabel=r"Source disturbance severity $B$",
+        ylabel="Outlet risk index",
+        ylim=(0, 0.80),
+    )
+    ax.set_xticks([0.25, 0.50, 0.75, 1.00])
+    ax.grid(axis="y")
+    ax.legend(frameon=False, ncol=5, loc="upper left")
+    figures += save_figure(fig, "fig_layer1_source_severity")
+
+    lc_stress = core.loc[core["scenario_family"] == "lc_stress"].copy()
+    lc_stress["parameter"] = pd.to_numeric(lc_stress["parameter"])
+    fig, ax = plt.subplots(figsize=(7.16, 3.25))
+    for network in NETWORKS:
+        rows = lc_stress.loc[lc_stress["network"] == network].sort_values("parameter")
+        ax.plot(
+            rows["parameter"],
+            rows["outlet_risk"],
+            label=network,
+            color=NETWORK_COLORS[network],
+            marker=NETWORK_MARKERS[network],
+        )
+    ax.set(
+        xlabel=r"Load scale applied before $S=\min(1,L/C)$",
+        ylabel="Outlet risk index",
+        ylim=(0, 1.05),
+    )
+    ax.set_xticks([0.50, 0.75, 1.00, 1.25, 1.50])
+    ax.grid(axis="y")
+    ax.legend(frameon=False, ncol=5, loc="upper left")
+    figures += save_figure(fig, "fig_layer1_lc_stress")
+
+    locations = core.loc[core["scenario_family"] == "blockage_location"].copy()
+    fig = plt.figure(figsize=(7.16, 4.65))
+    grid = fig.add_gridspec(2, 3)
+    axes = [
+        fig.add_subplot(grid[0, 0]),
+        fig.add_subplot(grid[0, 1]),
+        fig.add_subplot(grid[0, 2]),
+        fig.add_subplot(grid[1, 0]),
+        fig.add_subplot(grid[1, 1:]),
+    ]
+    for ax, network in zip(axes, NETWORKS):
+        rows = locations.loc[locations["network"] == network]
+        positions = np.arange(len(rows))
+        ax.bar(
+            positions,
+            rows["outlet_risk"],
+            color=NETWORK_COLORS[network],
+            width=0.68,
+        )
+        ax.set_title(network, fontweight="bold")
+        ax.set_xticks(positions, rows["location"].astype(str))
+        ax.set_ylim(0, 0.80)
+        ax.grid(axis="y")
+        ax.set_axisbelow(True)
+    axes[0].set_ylabel("Outlet risk index")
+    axes[3].set_ylabel("Outlet risk index")
+    axes[3].set_xlabel("Tested disturbance location")
+    axes[4].set_xlabel("Tested disturbance location")
+    figures += save_figure(fig, "fig_layer1_disturbance_location")
+
+    combinations = core.loc[core["scenario_family"] == "source_combination"].copy()
+    fig, axes = plt.subplots(1, 2, figsize=(7.16, 3.25), sharey=True)
+    for ax, network in zip(axes, ["N3", "N5"]):
+        rows = combinations.loc[combinations["network"] == network]
+        positions = np.arange(len(rows))
+        bars = ax.bar(
+            positions,
+            rows["outlet_risk"],
+            color=NETWORK_COLORS[network],
+            width=0.66,
+        )
+        ax.set_title(network, fontweight="bold")
+        ax.set_xticks(positions, rows["parameter"].astype(str))
+        if network == "N5":
+            ax.tick_params(axis="x", labelrotation=32)
+            for label in ax.get_xticklabels():
+                label.set_horizontalalignment("right")
+        ax.set_xlabel("Active source configuration")
+        ax.set_ylim(0, 0.80)
+        ax.grid(axis="y")
+        ax.set_axisbelow(True)
+        ax.bar_label(bars, fmt="%.4f", padding=2, fontsize=6.5)
+    axes[0].set_ylabel("Outlet risk index")
+    figures += save_figure(fig, "fig_layer1_source_combinations")
+
+    reconvergence = reconvergence.set_index("network").loc[["N3", "N4", "N5"]].reset_index()
+    positions = np.arange(len(reconvergence))
+    width = 0.34
+    fig, ax = plt.subplots(figsize=(7.16, 3.15))
+    outlet_bars = ax.bar(
+        positions - width / 2,
+        reconvergence["outlet_oi"],
+        width,
+        color=BLUE,
+        label="Outlet overlap inflation",
+    )
+    maximum_bars = ax.bar(
+        positions + width / 2,
+        reconvergence["maximum_oi"],
+        width,
+        color=AMBER,
+        label="Maximum node-level overlap inflation",
+    )
+    ax.set_xticks(positions, reconvergence["network"])
+    ax.set(xlabel="Controlled network", ylabel="Overlap inflation index", ylim=(0, 0.50))
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
+    ax.legend(frameon=False, loc="upper left")
+    ax.bar_label(outlet_bars, fmt="%.4f", padding=2, fontsize=7)
+    ax.bar_label(maximum_bars, fmt="%.4f", padding=2, fontsize=7)
+    figures += save_figure(fig, "fig_layer1_reconvergence")
+
+    lower = scalability["median_ms"] - scalability["q25_ms"]
+    upper = scalability["q75_ms"] - scalability["median_ms"]
+    fig, ax = plt.subplots(figsize=(7.16, 3.15))
+    ax.errorbar(
+        scalability["nodes"],
+        scalability["median_ms"],
+        yerr=[lower, upper],
+        color=BLUE,
+        marker="o",
+        capsize=3,
+        label="Median with interquartile range",
+    )
+    ax.set_xscale("log")
+    ax.set_xticks(scalability["nodes"], scalability["nodes"].astype(str))
+    ax.set(xlabel=r"Number of nodes $|V|$", ylabel="Runtime (ms)")
+    ax.grid(axis="y")
+    ax.legend(frameon=False, loc="upper left")
+    figures += save_figure(fig, "fig_layer1_scalability")
+
+    family_counts = {
+        str(family): int(count)
+        for family, count in core.groupby("scenario_family").size().items()
+    }
+    stats = {
+        "networks": NETWORKS,
+        "outlets": outlet_nodes,
+        "baseline_outlet_risk": {
+            network: outlet_risks[network] for network in NETWORKS
+        },
+        "scenario_family_counts": family_counts,
+        "scenario_runs": int(len(core)),
+        "historical_scenario_runs": int(
+            len(core.loc[core["scenario_family"] != "transmission"])
+        ),
+    }
+    return figures, stats
 
 
 def software_outputs() -> tuple[list[Path], list[Path], dict]:
@@ -636,16 +861,27 @@ def main() -> None:
 
     figure_paths: list[Path] = []
     table_paths: list[Path] = []
+    layer1_figures, layer1_stats = layer1_outputs()
     drainage_figures, drainage_tables, drainage_stats = drainage_outputs()
     software_figures, software_tables, software_stats = software_outputs()
     electrical_figures, electrical_tables, electrical_stats = electrical_outputs()
-    figure_paths += drainage_figures + software_figures + electrical_figures
+    figure_paths += (
+        layer1_figures + drainage_figures + software_figures + electrical_figures
+    )
     table_paths += drainage_tables + software_tables + electrical_tables
     table_paths.append(cross_domain_table(drainage_stats, software_stats, electrical_stats))
 
     inputs = [
+        ROOT / "data" / "historical" / "validation_reconstructed_nodes.csv",
+        ROOT / "results" / "core_scenarios.csv",
+        *[
+            ROOT / "results" / f"{network}_baseline_node_risk.csv"
+            for network in NETWORKS
+        ],
         ROOT / "data" / "recovered_candidate" / "N1-N5_network_summary.csv",
         ROOT / "results" / "N5_robustness_summary.csv",
+        ROOT / "results" / "reconvergence_summary.csv",
+        ROOT / "results" / "scalability.csv",
         ROOT / "data" / "swmm" / "extracted" / "swmm_comparison_summary.csv",
         ROOT / "data" / "software" / "express_4.18.2" / "nodes.csv",
         ROOT / "data" / "software" / "express_4.18.2" / "edges.csv",
@@ -665,6 +901,7 @@ def main() -> None:
         "input_sha256": {
             str(path.relative_to(ROOT)): sha256(require(path)) for path in inputs
         },
+        "layer1_paper_alignment": layer1_stats,
         "figures": [
             {"path": str(path.relative_to(ROOT)), "sha256": sha256(path)}
             for path in sorted(figure_paths)

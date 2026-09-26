@@ -23,6 +23,13 @@ with (OUTPUT_ROOT / "paper_outputs_manifest.json").open(encoding="utf-8") as han
     manifest = json.load(handle)
 
 expected_figure_stems = {
+    "fig_layer1_baseline_outlet_risk",
+    "fig_layer1_source_severity",
+    "fig_layer1_lc_stress",
+    "fig_layer1_disturbance_location",
+    "fig_layer1_source_combinations",
+    "fig_layer1_reconvergence",
+    "fig_layer1_scalability",
     "fig_drainage_robustness",
     "fig_drainage_swmm_alignment",
     "fig_software_tau_sensitivity",
@@ -43,7 +50,7 @@ expected_tables = {
 
 figure_paths = [ROOT / item["path"] for item in manifest["figures"]]
 table_paths = [ROOT / item["path"] for item in manifest["tables"]]
-assert len(figure_paths) == 12
+assert len(figure_paths) == 26
 assert len(table_paths) == 8
 assert {path.stem for path in figure_paths} == expected_figure_stems
 assert {path.name for path in table_paths} == expected_tables
@@ -63,5 +70,34 @@ for table in table_paths:
     text = table.read_text(encoding="utf-8")
     assert "\\toprule" in text and "\\bottomrule" in text
     assert "Auto-generated" in text
+
+layer1 = manifest["layer1_paper_alignment"]
+assert layer1["networks"] == ["N1", "N2", "N3", "N4", "N5"]
+assert layer1["outlets"] == {
+    "N1": "F",
+    "N2": "H",
+    "N3": "H",
+    "N4": "G",
+    "N5": "N20",
+}
+expected_outlet_risk = {
+    "N1": 0.053760,
+    "N2": 0.408000,
+    "N3": 0.106814,
+    "N4": 0.351372,
+    "N5": 0.7086404493,
+}
+for network, expected in expected_outlet_risk.items():
+    assert abs(layer1["baseline_outlet_risk"][network] - expected) < 5e-7
+assert layer1["scenario_runs"] == 161
+assert layer1["historical_scenario_runs"] == 136
+assert layer1["scenario_family_counts"] == {
+    "blockage_location": 36,
+    "intermediate_blockage": 45,
+    "lc_stress": 25,
+    "severity": 20,
+    "source_combination": 10,
+    "transmission": 25,
+}
 
 print("Publication-output hashes and inventory checks passed.")
