@@ -124,7 +124,7 @@
     "results/N5_baseline_node_risk.csv": "8322febb64bc1f574f964bab5bbbb33ae038a972a8d41888f0a898ef938a1e0f",
     "results/N5_robustness_summary.csv": "0dfb11934c7a6d2fa45c18776f1236fd284811b9118425d5c0e034d228bdca7e",
     "results/core_scenarios.csv": "7fe13151453b17ad8941fd077ac5ad741e39e51fee3d0a3adb3ea9dd5de4402f",
-    "results/electrical/socal28_sample/baseline_channel_summary.csv": "659312badf04f8d1dec1ddacf6475ffe01b63827123898e0a88601041b369744",
+    "results/electrical/socal28_sample/baseline_channel_summary.csv": "0dacf52644806772b75150644261bbcaf6ef3ae9d57a63baff8dc0a2795a8b04",
     "results/electrical/socal28_sample/baseline_manifest.json": "9d42edb6d48b48db5d7d151b8781b1016b396a9f2f4bfc2863ca8dd783e695cf",
     "results/reconvergence_summary.csv": "ee1d8cbad7f1aa8a5efd01b0faf1364b4b5b8fc41fd1e1de5ba47b9c1b148210",
     "results/scalability.csv": "21931a59cce996760c8f3143247977613d8f6c1d8eeb9b9418f8addd96933284",
