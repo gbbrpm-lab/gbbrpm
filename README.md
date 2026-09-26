@@ -176,6 +176,7 @@ python tests/reproducibility_test.py
 python tests/generic_properties_test.py
 python tests/software_case_test.py
 python tests/electrical_case_test.py
+python tests/paper_outputs_test.py
 python tests/swmm_reference_test.py
 ```
 
@@ -392,6 +393,22 @@ case until electrical definitions of `B`, `S`, and `tau` are declared without
 leaking the observed outcome into both model input and validation target. See
 `docs/electrical_domain_case.md` for the complete protocol and validation
 gates.
+
+## Reproducible paper outputs
+
+Generate the three-domain publication figures and LaTeX tables from frozen
+results with:
+
+```bash
+python scripts/generate_paper_outputs.py
+python tests/paper_outputs_test.py
+```
+
+The command writes vector PDFs, 300-dpi PNG previews, `booktabs` table files,
+and an input/output hash manifest under `results/paper/`. The six figure
+designs and eight tables cover the drainage, software, and electrical cases.
+See `docs/paper_outputs.md` for their intended evidentiary roles and the
+electrical validation boundary.
 
 ## Reproducibility notes
 

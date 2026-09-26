@@ -11,6 +11,7 @@ python tests/reproducibility_test.py
 python tests/generic_properties_test.py
 python tests/software_case_test.py
 python tests/electrical_case_test.py
+python tests/paper_outputs_test.py
 python tests/swmm_reference_test.py
 python run_experiments.py --data-source historical --trials 600 --seed 41
 python scripts/run_swmm_and_extract.py
@@ -65,6 +66,9 @@ python scripts/compare_swmm_reference.py
 - The available one-day magnitude archive is classified as a baseline/import
   check rather than event-response validation because its coverage begins
   after the documented November 13, 2024 switching sequence.
+- The publication-output generator deterministically produces six figure
+  designs in PDF and PNG plus eight `booktabs` LaTeX tables. A committed
+  manifest verifies every frozen input and generated output by SHA-256.
 
 ## Archived SWMM ranking metrics
 
