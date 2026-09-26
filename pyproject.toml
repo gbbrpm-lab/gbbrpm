@@ -21,7 +21,7 @@ experiments = [
 ]
 
 [project.urls]
-Repository = "https://github.com/gbbrpm-lab/gbbrpm"
+Repository = "https://github.com/gbbrpm-lab/gbbrpm-experiments"
 
 [tool.setuptools.packages.find]
 where = ["."]
