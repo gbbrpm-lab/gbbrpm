@@ -1,11 +1,13 @@
 # Reproducibility Status
 
-Verified on 2026-09-24 from an isolated Python virtual environment.
+Verified on 2026-09-26 from an isolated Python virtual environment.
 
 ## Commands
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
+python tests/package_api_test.py
 python tests/smoke_test.py
 python tests/reproducibility_test.py
 python tests/generic_properties_test.py
@@ -21,6 +23,8 @@ python scripts/compare_swmm_reference.py
 ## Verified results
 
 - All five historical networks load and produce bounded node states.
+- The installable `gbbrpm` package exposes the same calculation engine used by
+  the backwards-compatible repository scripts.
 - The controlled scenario suite contains 161 rows: the preserved 136-case
   historical protocol plus 25 uniform-transmission sensitivity cases.
 - All deterministic generic checks pass for topological-order invariance,
@@ -66,7 +70,7 @@ python scripts/compare_swmm_reference.py
 - The available one-day magnitude archive is classified as a baseline/import
   check rather than event-response validation because its coverage begins
   after the documented November 13, 2024 switching sequence.
-- The publication-output generator deterministically produces six figure
+- The publication-output generator deterministically produces thirteen figure
   designs in PDF and PNG plus eight `booktabs` LaTeX tables. A committed
   manifest verifies every frozen input and generated output by SHA-256.
 

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gbbrpm"
+version = "0.1.0"
+description = "Domain-agnostic Graph-Based Blockage Risk Propagation Model"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "networkx>=3.0",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+experiments = [
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "swmm-toolkit>=0.17",
+]
+
+[project.urls]
+Repository = "https://github.com/gbbrpm-lab/gbbrpm"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gbbrpm*"]
