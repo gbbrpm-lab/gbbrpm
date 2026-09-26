@@ -109,6 +109,7 @@ Use `--data-source historical` for historical validation reproduction or
 py -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+pip install -e .
 python run_experiments.py --data-source historical
 ```
 
@@ -118,8 +119,23 @@ python run_experiments.py --data-source historical
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 python run_experiments.py --data-source historical
 ```
+
+The editable installation exposes the domain-agnostic calculation engine to
+other applications while keeping the frozen experiment data and publication
+workflow separate:
+
+```python
+from gbbrpm import derive_susceptibility, evaluate_gbbrpm
+```
+
+The public package accepts pandas node and edge tables. Nodes require `node`
+and `B`; edges require `source`, `target`, and either an explicit `S` or both
+`L` and `C`. The optional `tau` column defaults to `1.0`. Repository-specific
+dataset loading remains available through `model.load_network` for backwards
+compatibility with the experiment scripts.
 
 ## Running experiments
 
@@ -171,6 +187,7 @@ Inspect saved outputs and run the smoke test:
 
 ```bash
 python inspect_results.py
+python tests/package_api_test.py
 python tests/smoke_test.py
 python tests/reproducibility_test.py
 python tests/generic_properties_test.py
@@ -458,12 +475,16 @@ gbbrpm/
 ├── results/
 │   ├── electrical/
 │   └── software/
+├── gbbrpm/
+│   ├── __init__.py
+│   └── core.py
 ├── scripts/
 ├── tests/
-├── model.py
+├── model.py              # repository data adapter and compatibility imports
 ├── scenarios.py
 ├── run_experiments.py
 ├── inspect_results.py
+├── pyproject.toml
 └── requirements.txt
 ```
 
