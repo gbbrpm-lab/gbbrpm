@@ -1,0 +1,105 @@
+{
+  "deterministic_layout_seed": 41,
+  "figures": [
+    {
+      "path": "results\\paper\\figures\\fig_drainage_robustness.pdf",
+      "sha256": "e538675b216c9a23302aaab17a0a3c83017c1a93ced53abe17b8f1ef528b0fc1"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_drainage_robustness.png",
+      "sha256": "4cfdf287d3e502329c8382a41aabcc2db605da6c4b0d0c574e3601f9049dd283"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_drainage_swmm_alignment.pdf",
+      "sha256": "414e2d38921e71067815809bcb3c29e998cd334f24448161893b8f999de29b2a"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_drainage_swmm_alignment.png",
+      "sha256": "f48613463acf911b4e5303ecbf36485c4b32f17cf0d5e9836d3a63c5823f796b"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_electrical_baseline_coverage.pdf",
+      "sha256": "3ab2806bdcd1c970587ac0781ce69bfc0ad53d3b79bde71bb1a0c4561a054d5e"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_electrical_baseline_coverage.png",
+      "sha256": "a03a106694c939b841dfebcb451be5345321dd282fd9d4b6da9c0fb75aa6919b"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_electrical_topology_overview.pdf",
+      "sha256": "67e72a42c398949e019ade76f5fa952c25fdddd644049525f678495440b31db9"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_electrical_topology_overview.png",
+      "sha256": "a93a48b3ddec5bea3f92886fad815a74d9a9c10eee20f44966816d50b4693ad4"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_software_tau_sensitivity.pdf",
+      "sha256": "6295486ab3de86e7f74b92aaebdc5f8666fec74b4d5bd0ffb369567d23eabb28"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_software_tau_sensitivity.png",
+      "sha256": "616d21ee9dffb0890143ebf6d3cc2a99c55b2bc25f8c5417b9d68533a8ab1e31"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_software_vulnerable_subgraph.pdf",
+      "sha256": "a82a79f11a22717d541d003d55ee522ffe06e879cf16314ed8fb277f143dec29"
+    },
+    {
+      "path": "results\\paper\\figures\\fig_software_vulnerable_subgraph.png",
+      "sha256": "8a34c6bfcba574def95dbd403144b1ee5cb6278b36ff5f1ac79f85b6bb5960d1"
+    }
+  ],
+  "generator": "scripts/generate_paper_outputs.py",
+  "input_sha256": {
+    "data\\electrical\\socal28_sample\\active_edges.csv": "a216c936fe08a1ba9fb2c18b850152d33757159388242338866a30f92f8c7924",
+    "data\\electrical\\socal28_sample\\event_request_windows.csv": "b4728ff0d2f647494e06237df0d82101b4f21e3dcb21cea7ea0de97d2b545dd2",
+    "data\\electrical\\socal28_sample\\meter_mapping.csv": "2772ec89eeeea88269efe38760dee89fe8cfda9a6fbe230061483c943d21c7d4",
+    "data\\electrical\\socal28_sample\\nodes.csv": "38b170bdefede6d5d60ee819c750abe0a1c121a3915431cfc601297527d5bb89",
+    "data\\recovered_candidate\\N1-N5_network_summary.csv": "e20845a577fd0b0b5434ffb42a5c92be7308c33ee28bbe9ab33070ce698616f0",
+    "data\\software\\express_4.18.2\\edges.csv": "11dfe4c2b82b30e836eda0bb31b8690edceb316134ee16fa8a6ffe22cd7cfab0",
+    "data\\software\\express_4.18.2\\nodes.csv": "854ddc4f2a4b803d983cb713145524589fdf6425d91e70867d90bd8aa182f31b",
+    "data\\swmm\\extracted\\swmm_comparison_summary.csv": "9b9a13e4a2e21adc46fca90b0e39362332e4d080061fabc0679415f20c02d69f",
+    "results\\N5_robustness_summary.csv": "0dfb11934c7a6d2fa45c18776f1236fd284811b9118425d5c0e034d228bdca7e",
+    "results\\electrical\\socal28_sample\\baseline_channel_summary.csv": "659312badf04f8d1dec1ddacf6475ffe01b63827123898e0a88601041b369744",
+    "results\\electrical\\socal28_sample\\baseline_manifest.json": "9d42edb6d48b48db5d7d151b8781b1016b396a9f2f4bfc2863ca8dd783e695cf",
+    "results\\software\\express_4.18.2\\ranking_stability.csv": "fec8c71059d4f224c3016a61e69cfd2db7b71025dbfe2fe7e3059bbdd2beee6a",
+    "results\\software\\express_4.18.2\\risk_by_tau.csv": "966eec52034cd3e4a1d1054d1c129f9493bc08506dd87b0bcda3ba37394fc67d",
+    "results\\software\\express_4.18.2\\summary_by_tau.csv": "f87886da04491a2f987fae5707e406ac3e13c8cc78ba6e1294603b36b879456b"
+  },
+  "interpretation_boundary": "Drainage includes behavioral and SWMM-reference evidence; software supports structural cross-domain applicability; electrical supports topology and baseline preprocessing while event validation remains pending.",
+  "tables": [
+    {
+      "path": "results\\paper\\tables\\table_cross_domain_evidence.tex",
+      "sha256": "cbcf561db4fa2e001d3fe492ca8486da2f4d2d7c872cb87d5625b6b564d793f5"
+    },
+    {
+      "path": "results\\paper\\tables\\table_drainage_networks.tex",
+      "sha256": "e90c70cb3bde36393108bc7bbdf25e27b7228dbcaba879ae67e5e4a1b2df3f49"
+    },
+    {
+      "path": "results\\paper\\tables\\table_drainage_swmm.tex",
+      "sha256": "f75dc1c6a63cbc9b7def9fe7a1b536bed9a4405508de3e486dbcbf0736f85376"
+    },
+    {
+      "path": "results\\paper\\tables\\table_electrical_baseline.tex",
+      "sha256": "19849984cff32ffa632bd1f5ed751dd29b9d64df97ba8acbaa7362d8c867d6d3"
+    },
+    {
+      "path": "results\\paper\\tables\\table_electrical_data_quality.tex",
+      "sha256": "3c0da1590c34aa667d5bfdfb9516d73e754bdba87822e93053ab26e0b2d8cf0c"
+    },
+    {
+      "path": "results\\paper\\tables\\table_electrical_event_windows.tex",
+      "sha256": "e190c0de41f14a8895b83b0c76a475c7100b065dea172285f05ff4d796a949a9"
+    },
+    {
+      "path": "results\\paper\\tables\\table_software_sensitivity.tex",
+      "sha256": "13a5c30f6622d371a33d16c7d008a4223e9a89c9041431dd92075a3b335bbf8c"
+    },
+    {
+      "path": "results\\paper\\tables\\table_software_vulnerabilities.tex",
+      "sha256": "93270bef0975f78bc044c85d67e7fb46c4bf9014f9ac6ab123f715a758e99cb9"
+    }
+  ]
+}
